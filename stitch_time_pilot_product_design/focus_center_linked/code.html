@@ -1,0 +1,205 @@
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-dim": "#dadad9", "primary": "#02645d", "surface-bright": "#faf9f8", "on-tertiary": "#ffffff", "on-tertiary-fixed": "#001e2e", "primary-fixed-dim": "#88d4cc", "surface-variant": "#e3e2e1", "surface-container-lowest": "#ffffff", "on-primary-container": "#d7fff9", "secondary-container": "#ffca98", "inverse-surface": "#2f3130", "on-primary-fixed-variant": "#00504b", "primary-container": "#2d7d76", "on-error": "#ffffff", "tertiary": "#3f5c71", "tertiary-container": "#57758b", "on-secondary": "#ffffff", "on-secondary-fixed": "#2c1600", "on-error-container": "#93000a", "error": "#ba1a1a", "tertiary-fixed": "#c8e6ff", "on-tertiary-container": "#f2f8ff", "outline": "#6f7977", "surface-container": "#eeeeed", "surface": "#faf9f8", "surface-container-highest": "#e3e2e1", "on-surface": "#1a1c1c", "on-primary-fixed": "#00201d", "on-secondary-fixed-variant": "#623f18", "inverse-primary": "#88d4cc", "background": "#faf9f8", "primary-fixed": "#a4f1e8", "secondary": "#7d562d", "surface-container-high": "#e9e8e7", "tertiary-fixed-dim": "#accae3", "outline-variant": "#bec9c6", "error-container": "#ffdad6", "on-secondary-container": "#7a532a", "on-primary": "#ffffff", "on-background": "#1a1c1c", "surface-tint": "#106a63", "inverse-on-surface": "#f1f0f0", "on-tertiary-fixed-variant": "#2c4a5e", "secondary-fixed-dim": "#f0bd8b", "surface-container-low": "#f4f3f2", "on-surface-variant": "#3f4947", "secondary-fixed": "#ffdcbd" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "stack-lg": "32px", "margin-mobile": "16px", "container-max": "1200px", "stack-md": "16px", "gutter": "24px", "stack-sm": "8px", "unit": "8px", "margin-desktop": "48px" }, "fontFamily": { "display": ["Manrope"], "headline-md": ["Manrope"], "body-md": ["Manrope"], "body-lg": ["Manrope"], "label-md": ["Manrope"], "label-sm": ["Manrope"], "headline-lg-mobile": ["Manrope"], "headline-lg": ["Manrope"] }, "fontSize": { "display": ["44px", { "lineHeight": "52px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }], "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }], "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }], "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script><style>@layer base{body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-background font-body-md text-on-background min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-margin-mobile flex items-center justify-between"><div class="flex items-center gap-unit"><img alt="Time Pilot Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCslErK6s2lCkDNyZ2YOOGLf-JGepN3jvVXxoojPdywhtPyW4YP7jE4ECVYfiqa4gBX8_Np3BR2citj5Tq0wX40thWhDmUKzJq7kwIvjhE5GkPqdXYhWQvxCx6KJAm5qBOWsvUymbI9PHE0a4mWynx9N9ZMq7UTWreCx5BWiznE5LwW5eZfVOgWYpdeztD-NiK3aT1LzPhaHFLuY2k_yrsiHYQUd4N5DmNbnIKfKOliXMKHPVrP1xaH6w"/><span class="font-headline-md text-headline-md text-primary">Focus</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover cursor-pointer" onclick="window.location.href='{{DATA:SCREEN:SCREEN_20}}'" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALzdez3qfxdaYGTtcpF7k1j9YIRBuRJdmDCUmHeonyv3vuiXbTz_IF6H3fb-1D-b7e5DKaINv9mWHH-WztaVO9UvO24fHBjV18v3n9-enf-quau4qT67eXETDT9R2SuQprf6N5UlafzatCcjOJVOswGRbN4GrOBgbTeSmWtBdXjlsFSZ6NkZmKA9gPlcU4ATcKzExG61kRp59D_YWZjX88oaSUWTvqUTeb3e7d8R6WKELXbdtMUgzREg"/></div></header><main class="flex-1 pt-16 pb-24 bg-surface px-margin-mobile"><div class="flex flex-col w-full h-full relative overflow-hidden" id="focus-container">
+<!-- Dynamic Background Layer -->
+<div class="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-1000 opacity-0 bg-primary-container" id="active-bg-layer">
+<div class="absolute top-[-20%] right-[-10%] w-[120vw] h-[120vw] bg-primary rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-[spin_20s_linear_infinite]" style="animation-direction: alternate;"></div>
+<div class="absolute bottom-[-10%] left-[-20%] w-[100vw] h-[100vw] bg-surface-tint rounded-full mix-blend-multiply filter blur-[80px] opacity-30 animate-[spin_15s_linear_infinite]"></div>
+</div>
+<div class="flex flex-col w-full h-full relative z-10 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)]" id="main-content">
+<!-- Header / Mode Selector -->
+<div class="px-gutter pt-stack-md pb-stack-lg transition-transform duration-700" id="header-area">
+<div class="bg-surface-container-low rounded-full p-1 flex shadow-[0_4px_20px_rgba(26,28,30,0.04)] relative">
+<div class="absolute top-1 bottom-1 left-1 bg-surface rounded-full shadow-[0_2px_8px_rgba(26,28,30,0.08)] transition-all duration-300 ease-out" id="mode-slider" style="width: 33.33%; transform: translateX(0%);"></div>
+<button class="flex-1 py-3 text-label-md text-on-surface text-center rounded-full relative z-10 font-bold transition-colors" data-mode="countdown">Countdown</button>
+<button class="flex-1 py-3 text-label-md text-on-surface-variant text-center rounded-full relative z-10 transition-colors" data-mode="stopwatch">Stopwatch</button>
+<button class="flex-1 py-3 text-label-md text-on-surface-variant text-center rounded-full relative z-10 transition-colors" data-mode="pomodoro">Pomodoro</button>
+</div>
+</div>
+<!-- Timer Display Area -->
+<div class="flex-1 flex flex-col items-center justify-center px-gutter transition-transform duration-700 relative" id="timer-area">
+<!-- Progress Ring (SVG) -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 transition-opacity duration-500" id="progress-ring-container">
+<svg class="w-72 h-72 transform -rotate-90 drop-shadow-[0_4px_20px_rgba(26,28,30,0.04)]" viewbox="0 0 120 120">
+<circle class="text-surface-container-high" cx="60" cy="60" fill="none" r="54" stroke="currentColor" stroke-width="2"></circle>
+<circle class="text-primary transition-all duration-1000 ease-linear" cx="60" cy="60" fill="none" id="progress-ring-path" r="54" stroke="currentColor" stroke-dasharray="339.292" stroke-dashoffset="0" stroke-linecap="round" stroke-width="4"></circle>
+</svg>
+</div>
+<!-- Time Display -->
+<div class="text-center relative z-10 transform transition-all duration-700" id="time-display-container">
+<div class="font-display text-[72px] leading-none text-on-surface font-light tracking-tighter tabular-nums drop-shadow-sm transition-colors duration-700" id="time-display">30:00</div>
+<div class="text-label-md text-on-surface-variant mt-2 font-medium tracking-wide uppercase transition-opacity duration-500" id="session-label">Deep Work</div>
+</div>
+</div>
+<!-- Controls Area -->
+<div class="px-gutter pb-stack-lg transition-transform duration-700 flex flex-col gap-stack-md" id="controls-area">
+<!-- Quick Options (Countdown/Pomodoro only) -->
+<div class="flex justify-center gap-unit transition-opacity duration-300" id="quick-options">
+<button class="w-12 h-12 rounded-full bg-surface-container-low text-label-md text-on-surface-variant flex items-center justify-center shadow-[0_2px_8px_rgba(26,28,30,0.04)] hover:bg-surface-container transition-colors">15</button>
+<button class="w-12 h-12 rounded-full bg-primary text-label-md text-on-primary flex items-center justify-center shadow-[0_4px_16px_rgba(2,100,93,0.2)] font-bold transition-transform active:scale-95">30</button>
+<button class="w-12 h-12 rounded-full bg-surface-container-low text-label-md text-on-surface-variant flex items-center justify-center shadow-[0_2px_8px_rgba(26,28,30,0.04)] hover:bg-surface-container transition-colors">45</button>
+<button class="w-12 h-12 rounded-full bg-surface-container-low text-label-md text-on-surface-variant flex items-center justify-center shadow-[0_2px_8px_rgba(26,28,30,0.04)] hover:bg-surface-container transition-colors">60</button>
+</div>
+<!-- Main Action Buttons -->
+<div class="flex items-center justify-center gap-gutter relative h-20">
+<!-- Start Button (Initial State) -->
+<button class="absolute w-20 h-20 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(2,100,93,0.3)] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-90 hover:scale-105 z-20" id="btn-start" onclick="window.location.href='{{DATA:SCREEN:SCREEN_26}}'">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<!-- Active State Buttons (Hidden initially) -->
+<div class="absolute inset-0 flex items-center justify-center gap-stack-lg opacity-0 pointer-events-none transition-opacity duration-500 z-10" id="active-controls">
+<button class="w-16 h-16 bg-surface text-primary rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(26,28,30,0.08)] transition-transform active:scale-90" id="btn-pause">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="w-16 h-16 bg-surface-container-low text-error rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(26,28,30,0.04)] transition-transform active:scale-90" id="btn-stop">
+<span class="material-symbols-outlined text-[28px]">stop</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('btn-start');
+    const pauseBtn = document.getElementById('btn-pause');
+    const stopBtn = document.getElementById('btn-stop');
+    const activeControls = document.getElementById('active-controls');
+    
+    const headerArea = document.getElementById('header-area');
+    const timerArea = document.getElementById('timer-area');
+    const quickOptions = document.getElementById('quick-options');
+    const activeBgLayer = document.getElementById('active-bg-layer');
+    const timeDisplay = document.getElementById('time-display');
+    const timeDisplayContainer = document.getElementById('time-display-container');
+    const sessionLabel = document.getElementById('session-label');
+    const progressRing = document.getElementById('progress-ring-container');
+
+    const modeButtons = document.querySelectorAll('[data-mode]');
+    const modeSlider = document.getElementById('mode-slider');
+
+    let isRunning = false;
+
+    // Mode Switching Logic
+    modeButtons.forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        if(isRunning) return; // Don't switch while running
+        
+        // Update slider position
+        modeSlider.style.transform = `translateX(${index * 100}%)`;
+        
+        // Update button styles
+        modeButtons.forEach(b => {
+          b.classList.remove('text-on-surface', 'font-bold');
+          b.classList.add('text-on-surface-variant');
+        });
+        btn.classList.add('text-on-surface', 'font-bold');
+        btn.classList.remove('text-on-surface-variant');
+
+        // Reset UI based on mode
+        const mode = btn.dataset.mode;
+        if(mode === 'countdown') {
+          timeDisplay.innerText = '30:00';
+          sessionLabel.innerText = 'Deep Work';
+          quickOptions.style.display = 'flex';
+          setTimeout(() => quickOptions.style.opacity = '1', 50);
+          progressRing.style.opacity = '1';
+        } else if(mode === 'stopwatch') {
+          timeDisplay.innerText = '00:00';
+          sessionLabel.innerText = 'Open Session';
+          quickOptions.style.opacity = '0';
+          setTimeout(() => quickOptions.style.display = 'none', 300);
+          progressRing.style.opacity = '0';
+        } else if(mode === 'pomodoro') {
+          timeDisplay.innerText = '25:00';
+          sessionLabel.innerText = 'Pomodoro • 1/4';
+          quickOptions.style.display = 'flex';
+          setTimeout(() => quickOptions.style.opacity = '1', 50);
+          progressRing.style.opacity = '1';
+        }
+      });
+    });
+
+    // Start Focus Mode Transition
+    startBtn.addEventListener('click', () => {
+      isRunning = true;
+      
+      // Hide global nav (if accessible, simulating here)
+      const nav = document.querySelector('nav');
+      if(nav) nav.style.transform = 'translateY(100%)';
+      const header = document.querySelector('header');
+      if(header) header.style.transform = 'translateY(-100%)';
+
+      // UI Transitions
+      headerArea.style.opacity = '0';
+      headerArea.style.transform = 'translateY(-20px)';
+      headerArea.style.pointerEvents = 'none';
+
+      quickOptions.style.opacity = '0';
+      quickOptions.style.transform = 'translateY(20px)';
+      quickOptions.style.pointerEvents = 'none';
+
+      // Animate Buttons
+      startBtn.style.transform = 'scale(0) translateY(40px)';
+      startBtn.style.opacity = '0';
+      startBtn.style.pointerEvents = 'none';
+      
+      activeControls.style.opacity = '1';
+      activeControls.style.pointerEvents = 'auto';
+      activeControls.style.transitionDelay = '200ms';
+
+      // Center Timer Display
+      timerArea.style.transform = 'translateY(0) scale(1.1)';
+      timeDisplay.classList.remove('text-on-surface');
+      timeDisplay.classList.add('text-on-primary-container');
+      sessionLabel.classList.remove('text-on-surface-variant');
+      sessionLabel.classList.add('text-primary-fixed-dim');
+
+      // Bring in immersive background
+      activeBgLayer.style.opacity = '1';
+    });
+
+    // Stop Focus Mode Transition
+    stopBtn.addEventListener('click', () => {
+      isRunning = false;
+      
+      // Show global nav
+      const nav = document.querySelector('nav');
+      if(nav) nav.style.transform = 'translateY(0)';
+      const header = document.querySelector('header');
+      if(header) header.style.transform = 'translateY(0)';
+
+      // Restore UI
+      headerArea.style.opacity = '1';
+      headerArea.style.transform = 'translateY(0)';
+      headerArea.style.pointerEvents = 'auto';
+
+      quickOptions.style.opacity = '1';
+      quickOptions.style.transform = 'translateY(0)';
+      quickOptions.style.pointerEvents = 'auto';
+
+      // Restore Buttons
+      activeControls.style.opacity = '0';
+      activeControls.style.pointerEvents = 'none';
+      activeControls.style.transitionDelay = '0ms';
+
+      startBtn.style.transform = 'scale(1) translateY(0)';
+      startBtn.style.opacity = '1';
+      startBtn.style.pointerEvents = 'auto';
+
+      // Restore Timer Display
+      timerArea.style.transform = 'translateY(0) scale(1)';
+      timeDisplay.classList.add('text-on-surface');
+      timeDisplay.classList.remove('text-on-primary-container');
+      sessionLabel.classList.add('text-on-surface-variant');
+      sessionLabel.classList.remove('text-primary-fixed-dim');
+
+      // Remove immersive background
+      activeBgLayer.style.opacity = '0';
+    });
+  });
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/80 backdrop-blur-xl shadow-[0_-1px_8px_rgba(0,0,0,0.04)]" data-active-classes="text-primary font-bold"><div class="flex justify-around items-center h-16 px-unit"><a class="flex flex-col items-center justify-center gap-1 w-full text-on-surface-variant transition-colors" data-path="dashboard" href="{{DATA:SCREEN:SCREEN_32}}"><span class="material-symbols-outlined">dashboard</span><span class="font-label-sm text-label-sm">Dashboard</span></a><a class="flex flex-col items-center justify-center gap-1 w-full text-on-surface-variant transition-colors" data-path="plan" href="{{DATA:SCREEN:SCREEN_31}}"><span class="material-symbols-outlined">assignment</span><span class="font-label-sm text-label-sm">Plan</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 w-full transition-colors text-primary font-bold" data-path="focus" href="#"><span class="material-symbols-outlined">timer</span><span class="font-label-sm text-label-sm">Focus</span></a><a class="flex flex-col items-center justify-center gap-1 w-full text-on-surface-variant transition-colors" data-path="ai-coach" href="{{DATA:SCREEN:SCREEN_22}}"><span class="material-symbols-outlined">auto_awesome</span><span class="font-label-sm text-label-sm">AI</span></a><a class="flex flex-col items-center justify-center gap-1 w-full text-on-surface-variant transition-colors" data-path="review" href="{{DATA:SCREEN:SCREEN_24}}"><span class="material-symbols-outlined">bar_chart</span><span class="font-label-sm text-label-sm">Review</span></a></div></nav></body></html>

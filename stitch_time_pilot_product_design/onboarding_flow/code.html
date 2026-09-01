@@ -1,0 +1,268 @@
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-dim": "#121413", primary: "#88d4cc", "surface-bright": "#383939", "on-tertiary": "#133347", "on-tertiary-fixed": "#001e2e", "primary-fixed-dim": "#88d4cc", "surface-variant": "#343535", "surface-container-lowest": "#0d0e0e", "on-primary-container": "#d7fff9", "secondary-container": "#65411a", "inverse-surface": "#e3e2e1", "on-primary-fixed-variant": "#00504b", "primary-container": "#2d7d76", "on-error": "#690005", tertiary: "#accae3", "tertiary-container": "#57758b", "on-secondary": "#482904", "on-secondary-fixed": "#2c1600", "on-error-container": "#ffdad6", error: "#ffb4ab", "tertiary-fixed": "#c8e6ff", "on-tertiary-container": "#f2f8ff", outline: "#889391", "surface-container": "#1e2020", surface: "#121413", "surface-container-highest": "#343535", "on-surface": "#e3e2e1", "on-primary-fixed": "#00201d", "on-secondary-fixed-variant": "#623f18", "inverse-primary": "#106a63", background: "#121413", "primary-fixed": "#a4f1e8", secondary: "#f0bd8b", "surface-container-high": "#292a2a", "tertiary-fixed-dim": "#accae3", "outline-variant": "#3f4947", "error-container": "#93000a", "on-secondary-container": "#e1af7e", "on-primary": "#003733", "on-background": "#e3e2e1", "surface-tint": "#88d4cc", "inverse-on-surface": "#2f3130", "on-tertiary-fixed-variant": "#2c4a5e", "secondary-fixed-dim": "#f0bd8b", "surface-container-low": "#1a1c1c", "on-surface-variant": "#bec9c6", "secondary-fixed": "#ffdcbd"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"stack-lg": "32px", "margin-mobile": "16px", "container-max": "1200px", "stack-md": "16px", gutter: "24px", "stack-sm": "8px", unit: "8px", "margin-desktop": "48px"}, fontFamily: {display: ["Manrope"], "headline-md": ["Manrope"], "body-md": ["Manrope"], "body-lg": ["Manrope"], "label-md": ["Manrope"], "label-sm": ["Manrope"], "headline-lg-mobile": ["Manrope"], "headline-lg": ["Manrope"], headline: ["Manrope"], body: ["Manrope"], label: ["Manrope"]}, fontSize: {display: ["44px", {lineHeight: "52px", letterSpacing: "-0.02em", fontWeight: "700"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "500"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background pt-safe pb-safe min-h-screen flex flex-col"><main class="flex-1 flex flex-col"><div class="flex flex-col w-full h-full relative overflow-hidden bg-background">
+<!-- Interactive Progress Header (Fixed at top of content area) -->
+<div class="sticky top-0 z-50 bg-background/90 backdrop-blur-md px-margin-mobile py-stack-md transition-all duration-300 shadow-[0_4px_20px_rgba(26,28,30,0.04)]" id="progressHeader">
+<div class="flex justify-between items-center mb-stack-sm">
+<h1 class="headline-md text-on-background" id="stepTitle">What are you working towards?</h1>
+<span class="label-md text-tertiary" id="stepCounter">1 of 5</span>
+</div>
+<!-- Custom Progress Indicator -->
+<div class="relative h-[4px] w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] w-1/5" id="progressBar"></div>
+</div>
+</div>
+<!-- Scrollable Form Area -->
+<div class="flex-1 overflow-y-auto px-margin-mobile py-stack-md pb-[120px] scroll-smooth" id="formContainer">
+<!-- Step 1: Goals -->
+<div class="step-content opacity-100 translate-x-0 transition-all duration-500 flex flex-col gap-stack-md" id="step1">
+<p class="body-md text-on-surface-variant mb-stack-sm">Select the areas where you want to focus your energy.</p>
+<div class="grid grid-cols-2 gap-unit">
+<label class="cursor-pointer group">
+<input class="peer hidden" type="checkbox" value="College Studies"/>
+<div class="h-full p-stack-md rounded-lg bg-surface flex flex-col items-center text-center gap-stack-sm shadow-[0_2px_8px_rgba(26,28,30,0.02)] transition-all duration-300 peer-checked:bg-primary-container peer-checked:text-on-primary-container group-hover:shadow-[0_4px_16px_rgba(26,28,30,0.06)] relative overflow-hidden">
+<div class="absolute inset-0 bg-primary opacity-0 peer-checked:opacity-5 transition-opacity"></div>
+<span class="material-symbols-outlined text-[32px] text-tertiary peer-checked:text-on-primary-container transition-colors">school</span>
+<span class="label-md font-medium text-on-surface peer-checked:text-on-primary-container">College Studies</span>
+</div>
+</label>
+<label class="cursor-pointer group">
+<input class="peer hidden" type="checkbox" value="Competitive Exams"/>
+<div class="h-full p-stack-md rounded-lg bg-surface flex flex-col items-center text-center gap-stack-sm shadow-[0_2px_8px_rgba(26,28,30,0.02)] transition-all duration-300 peer-checked:bg-primary-container peer-checked:text-on-primary-container group-hover:shadow-[0_4px_16px_rgba(26,28,30,0.06)] relative overflow-hidden">
+<div class="absolute inset-0 bg-primary opacity-0 peer-checked:opacity-5 transition-opacity"></div>
+<span class="material-symbols-outlined text-[32px] text-tertiary peer-checked:text-on-primary-container transition-colors">menu_book</span>
+<span class="label-md font-medium text-on-surface peer-checked:text-on-primary-container">Competitive Exams</span>
+</div>
+</label>
+<label class="cursor-pointer group">
+<input class="peer hidden" type="checkbox" value="Health &amp; Fitness"/>
+<div class="h-full p-stack-md rounded-lg bg-surface flex flex-col items-center text-center gap-stack-sm shadow-[0_2px_8px_rgba(26,28,30,0.02)] transition-all duration-300 peer-checked:bg-primary-container peer-checked:text-on-primary-container group-hover:shadow-[0_4px_16px_rgba(26,28,30,0.06)] relative overflow-hidden">
+<div class="absolute inset-0 bg-primary opacity-0 peer-checked:opacity-5 transition-opacity"></div>
+<span class="material-symbols-outlined text-[32px] text-tertiary peer-checked:text-on-primary-container transition-colors">fitness_center</span>
+<span class="label-md font-medium text-on-surface peer-checked:text-on-primary-container">Health &amp; Fitness</span>
+</div>
+</label>
+<label class="cursor-pointer group">
+<input class="peer hidden" type="checkbox" value="Skill Development"/>
+<div class="h-full p-stack-md rounded-lg bg-surface flex flex-col items-center text-center gap-stack-sm shadow-[0_2px_8px_rgba(26,28,30,0.02)] transition-all duration-300 peer-checked:bg-primary-container peer-checked:text-on-primary-container group-hover:shadow-[0_4px_16px_rgba(26,28,30,0.06)] relative overflow-hidden">
+<div class="absolute inset-0 bg-primary opacity-0 peer-checked:opacity-5 transition-opacity"></div>
+<span class="material-symbols-outlined text-[32px] text-tertiary peer-checked:text-on-primary-container transition-colors">psychology</span>
+<span class="label-md font-medium text-on-surface peer-checked:text-on-primary-container">Skill Development</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Step 2: Priorities -->
+<div class="step-content hidden opacity-0 translate-x-8 transition-all duration-500 flex flex-col gap-stack-md" id="step2">
+<p class="body-md text-on-surface-variant mb-stack-sm">Drag to reorder based on what matters most right now.</p>
+<div class="flex flex-col gap-unit" id="priorityList">
+<!-- Injected via JS based on Step 1 selection -->
+<div class="p-stack-sm bg-surface rounded-lg shadow-[0_2px_8px_rgba(26,28,30,0.02)] flex items-center justify-between touch-none">
+<div class="flex items-center gap-stack-sm">
+<span class="material-symbols-outlined text-tertiary">drag_indicator</span>
+<span class="body-md text-on-surface">College Studies</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center label-sm text-on-surface-variant">1</div>
+</div>
+</div>
+</div>
+<!-- Step 3: Timeline -->
+<div class="step-content hidden opacity-0 translate-x-8 transition-all duration-500 flex flex-col gap-stack-md" id="step3">
+<p class="body-md text-on-surface-variant mb-stack-sm">Establish your fixed daily rhythms to find available time.</p>
+<div class="flex flex-col gap-unit">
+<!-- Sleep Block -->
+<div class="bg-surface rounded-xl p-stack-sm shadow-[0_2px_8px_rgba(26,28,30,0.02)] flex flex-col gap-unit">
+<div class="flex items-center gap-stack-sm">
+<div class="w-2 h-8 bg-tertiary rounded-full"></div>
+<span class="material-symbols-outlined text-tertiary">bedtime</span>
+<span class="label-md font-medium text-on-surface flex-1">Sleep Target</span>
+</div>
+<div class="flex gap-unit">
+<select class="flex-1 bg-surface-container rounded-lg px-stack-sm py-2 body-md text-on-surface appearance-none outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all">
+<option>10:00 PM</option>
+<option>11:00 PM</option>
+<option>12:00 AM</option>
+</select>
+<div class="w-px bg-surface-variant my-1"></div>
+<select class="flex-1 bg-surface-container rounded-lg px-stack-sm py-2 body-md text-on-surface appearance-none outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all">
+<option>6:00 AM</option>
+<option>7:00 AM</option>
+<option>8:00 AM</option>
+</select>
+</div>
+</div>
+<button class="w-full py-stack-sm bg-surface-container rounded-lg flex items-center justify-center gap-unit text-primary label-md font-medium hover:bg-surface-container-highest transition-colors mt-stack-sm">
+<span class="material-symbols-outlined text-[20px]">add</span> Add Commitment
+        </button>
+</div>
+</div>
+<!-- Step 4: Free Time Intentions -->
+<div class="step-content hidden opacity-0 translate-x-8 transition-all duration-500 flex flex-col gap-stack-md" id="step4">
+<p class="body-md text-on-surface-variant mb-stack-sm">When you find pockets of free time, how would you prefer to use them?</p>
+<div class="flex flex-wrap gap-unit">
+<label class="cursor-pointer">
+<input class="peer hidden" type="checkbox" value="Study"/>
+<div class="px-stack-md py-2 rounded-full bg-surface shadow-[0_2px_8px_rgba(26,28,30,0.02)] text-on-surface body-md peer-checked:bg-secondary-container peer-checked:text-on-secondary-container transition-all">Study Deeply</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer hidden" type="checkbox" value="Rest"/>
+<div class="px-stack-md py-2 rounded-full bg-surface shadow-[0_2px_8px_rgba(26,28,30,0.02)] text-on-surface body-md peer-checked:bg-secondary-container peer-checked:text-on-secondary-container transition-all">Active Rest</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer hidden" type="checkbox" value="Exercise"/>
+<div class="px-stack-md py-2 rounded-full bg-surface shadow-[0_2px_8px_rgba(26,28,30,0.02)] text-on-surface body-md peer-checked:bg-secondary-container peer-checked:text-on-secondary-container transition-all">Move Body</div>
+</label>
+</div>
+</div>
+<!-- Step 5: First Tasks -->
+<div class="step-content hidden opacity-0 translate-x-8 transition-all duration-500 flex flex-col gap-stack-md" id="step5">
+<p class="body-md text-on-surface-variant mb-stack-sm">Let's plant the first seeds. Add a task you want to accomplish soon.</p>
+<div class="bg-surface rounded-xl p-stack-md shadow-[0_4px_20px_rgba(26,28,30,0.04)] flex flex-col gap-stack-md">
+<div class="relative">
+<input class="w-full bg-transparent border-b border-surface-variant py-2 body-md text-on-surface focus:outline-none focus:border-primary peer placeholder-transparent" id="taskName" placeholder="Task name" type="text"/>
+<label class="absolute left-0 top-2 label-md text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-[10px] peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-[10px]" for="taskName">What needs doing?</label>
+</div>
+<div class="flex gap-stack-md">
+<div class="flex-1 relative">
+<input class="w-full bg-transparent border-b border-surface-variant py-2 body-md text-on-surface focus:outline-none focus:border-primary peer placeholder-transparent" id="taskDuration" placeholder="Duration" type="number"/>
+<label class="absolute left-0 top-2 label-md text-on-surface-variant transition-all peer-focus:-top-4 peer-focus:text-[10px] peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-[10px]" for="taskDuration">Mins</label>
+</div>
+<div class="flex-1 relative">
+<select class="w-full bg-transparent border-b border-surface-variant py-2 body-md text-on-surface focus:outline-none focus:border-primary appearance-none">
+<option>High Priority</option>
+<option>Medium Priority</option>
+<option>Low Priority</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Bar (Fixed) -->
+<div class="absolute bottom-0 left-0 w-full p-margin-mobile bg-gradient-to-t from-background via-background/95 to-transparent pt-stack-lg flex justify-between items-center z-50">
+<button class="px-stack-md py-stack-sm rounded-lg label-md font-medium text-tertiary opacity-0 pointer-events-none transition-opacity duration-300" id="btnBack">Back</button>
+<button class="ml-auto px-stack-lg py-stack-sm rounded-lg bg-primary text-on-primary label-md font-medium shadow-[0_4px_12px_rgba(2,100,93,0.2)] hover:shadow-[0_6px_16px_rgba(2,100,93,0.3)] transition-all duration-300 flex items-center gap-unit active:scale-95" id="btnNext">
+        Continue <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let currentStep = 1;
+    const totalSteps = 5;
+    
+    const steps = [
+      document.getElementById('step1'),
+      document.getElementById('step2'),
+      document.getElementById('step3'),
+      document.getElementById('step4'),
+      document.getElementById('step5')
+    ];
+    
+    const titles = [
+      "What are you working towards?",
+      "What matters most right now?",
+      "Build your typical day",
+      "Intentions for free time",
+      "Add your first task"
+    ];
+    
+    const btnNext = document.getElementById('btnNext');
+    const btnBack = document.getElementById('btnBack');
+    const stepTitle = document.getElementById('stepTitle');
+    const stepCounter = document.getElementById('stepCounter');
+    const progressBar = document.getElementById('progressBar');
+    
+    function updateUI() {
+      // Update progress
+      progressBar.style.width = `${(currentStep / totalSteps) * 100}%`;
+      stepCounter.textContent = `${currentStep} of ${totalSteps}`;
+      
+      // Animate title change
+      stepTitle.style.opacity = 0;
+      setTimeout(() => {
+        stepTitle.textContent = titles[currentStep - 1];
+        stepTitle.style.opacity = 1;
+      }, 200);
+
+      // Handle Back Button visibility
+      if (currentStep > 1) {
+        btnBack.classList.remove('opacity-0', 'pointer-events-none');
+        btnBack.classList.add('opacity-100');
+      } else {
+        btnBack.classList.add('opacity-0', 'pointer-events-none');
+        btnBack.classList.remove('opacity-100');
+      }
+      
+      // Handle Next Button text
+      if (currentStep === totalSteps) {
+        btnNext.innerHTML = 'Complete Setup <span class="material-symbols-outlined text-[18px]">check</span>';
+      } else {
+        btnNext.innerHTML = 'Continue <span class="material-symbols-outlined text-[18px]">arrow_forward</span>';
+      }
+
+      // Transition steps
+      steps.forEach((step, index) => {
+        if (index + 1 === currentStep) {
+          step.classList.remove('hidden');
+          // small delay to allow display:block to apply before animating opacity/transform
+          setTimeout(() => {
+            step.classList.remove('opacity-0', 'translate-x-8', '-translate-x-8');
+            step.classList.add('opacity-100', 'translate-x-0');
+          }, 50);
+        } else {
+          step.classList.remove('opacity-100', 'translate-x-0');
+          step.classList.add('opacity-0');
+          if (index + 1 < currentStep) {
+             step.classList.add('-translate-x-8');
+          } else {
+             step.classList.add('translate-x-8');
+          }
+          setTimeout(() => {
+            if (index + 1 !== currentStep) step.classList.add('hidden');
+          }, 500); // match transition duration
+        }
+      });
+    }
+
+    btnNext.addEventListener('click', () => {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateUI();
+      } else {
+        // Final action simulation
+        document.body.innerHTML = `
+          <div class="flex flex-col items-center justify-center w-full min-h-screen bg-background text-center px-margin-mobile">
+             <div class="w-24 h-24 mb-stack-lg relative">
+                <div class="absolute inset-0 bg-primary-container rounded-full animate-ping opacity-20"></div>
+                <div class="absolute inset-2 bg-primary rounded-full flex items-center justify-center text-on-primary">
+                   <span class="material-symbols-outlined text-[40px]">flight_takeoff</span>
+                </div>
+             </div>
+             <h1 class="headline-lg-mobile text-on-background mb-stack-sm">Your Time Pilot is ready.</h1>
+             <p class="body-md text-on-surface-variant">Calibrating your focus space...</p>
+          </div>
+        `;
+      }
+    });
+
+    btnBack.addEventListener('click', () => {
+      if (currentStep > 1) {
+        currentStep--;
+        updateUI();
+      }
+    });
+    
+    // Initial Setup
+    stepTitle.style.transition = 'opacity 0.2s ease-in-out';
+  });
+</script></main></body></html>
