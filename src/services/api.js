@@ -34,11 +34,13 @@ const defaultSettings = {
   dailyDigest: true
 };
 
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 export const api = {
   // --- Tasks API ---
   async fetchTasks() {
     try {
-      const res = await fetch('/api/tasks');
+      const res = await fetch(`${API_BASE}/api/tasks`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -49,7 +51,7 @@ export const api = {
 
   async saveTask(task) {
     try {
-      const res = await fetch('/api/tasks', {
+      const res = await fetch(`${API_BASE}/api/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
@@ -64,7 +66,7 @@ export const api = {
 
   async updateTask(task_id, updatedTask) {
     try {
-      const res = await fetch(`/api/tasks/${task_id}`, {
+      const res = await fetch(`${API_BASE}/api/tasks/${task_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedTask)
@@ -79,7 +81,7 @@ export const api = {
 
   async deleteTask(taskId) {
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -91,7 +93,7 @@ export const api = {
   // --- Commitments API ---
   async fetchCommitments() {
     try {
-      const res = await fetch('/api/commitments');
+      const res = await fetch(`${API_BASE}/api/commitments`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -102,7 +104,7 @@ export const api = {
 
   async saveCommitment(commitment) {
     try {
-      const res = await fetch('/api/commitments', {
+      const res = await fetch(`${API_BASE}/api/commitments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(commitment)
@@ -117,7 +119,7 @@ export const api = {
 
   async deleteCommitment(commitmentId) {
     try {
-      const res = await fetch(`/api/commitments/${commitmentId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/commitments/${commitmentId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -129,7 +131,7 @@ export const api = {
   // --- Focus API ---
   async fetchFocusHistory() {
     try {
-      const res = await fetch('/api/focus/history');
+      const res = await fetch(`${API_BASE}/api/focus/history`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -140,7 +142,7 @@ export const api = {
 
   async logFocusSession(session) {
     try {
-      const res = await fetch('/api/focus/log', {
+      const res = await fetch(`${API_BASE}/api/focus/log`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(session)
@@ -156,7 +158,7 @@ export const api = {
   // --- Chat API ---
   async fetchChatHistory() {
     try {
-      const res = await fetch('/api/coach/messages');
+      const res = await fetch(`${API_BASE}/api/coach/messages`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -167,7 +169,7 @@ export const api = {
 
   async sendMessageToCoach(userMsg) {
     try {
-      const res = await fetch('/api/coach/message', {
+      const res = await fetch(`${API_BASE}/api/coach/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userMsg)
@@ -177,7 +179,7 @@ export const api = {
     } catch (e) {
       console.warn('FastAPI backend coach offline, chat handled locally.');
       // Simulated client-side response fallback
-      const text_lower = userMsg.text.lower();
+      const text_lower = (userMsg.text || '').toLowerCase();
       let reply = "That sounds like a great plan, Sam. I'm here to support your deep focus. Let me know if you need to schedule a timer for it!";
       if (text_lower.includes("should i do now")) reply = "You have 35 minutes of flexible time right now. I recommend starting your high-priority 'Mathematics Practice' focus session.";
       
@@ -191,7 +193,7 @@ export const api = {
   // --- Settings API ---
   async fetchSettings() {
     try {
-      const res = await fetch('/api/settings');
+      const res = await fetch(`${API_BASE}/api/settings`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -202,7 +204,7 @@ export const api = {
 
   async saveSettings(settings) {
     try {
-      const res = await fetch('/api/settings', {
+      const res = await fetch(`${API_BASE}/api/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
