@@ -72,10 +72,19 @@ async def seed_if_empty():
             "text": "Hello Sam! I'm your Time Pilot Coach. I can help you analyze your schedule, manage capacity, or jump into a focus session. What's on your mind today?"
         })
 
+@app.get("/")
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "Time Pilot API"}
+
 @app.on_event("startup")
 async def startup_event():
-    # Run auto seed
-    await seed_if_empty()
+    # Run auto seed safely without crashing server if DB is unreachable
+    try:
+        await seed_if_empty()
+        print("Database connection verified and initialized.")
+    except Exception as e:
+        print(f"Notice: Could not seed database on startup ({e}). App is online.")
 
 
 # ----------------- Settings Endpoint -----------------
