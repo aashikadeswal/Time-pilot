@@ -3,8 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import time
 
-from .database import db
-from .models import TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
+try:
+    from .database import db
+    from .models import TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
+except (ImportError, ValueError):
+    from database import db
+    from models import TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
 
 app = FastAPI(title="Time Pilot Backend API")
 
