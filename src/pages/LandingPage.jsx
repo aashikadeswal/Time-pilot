@@ -6,7 +6,7 @@ export default function LandingPage() {
 
   const handleSeeHowItWorks = (e) => {
     e.preventDefault();
-    const featuresSection = document.getElementById('features-section');
+    const featuresSection = document.getElementById('how-it-works-section');
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -14,30 +14,39 @@ export default function LandingPage() {
 
   return (
     <div className="bg-background font-display min-h-screen flex flex-col transition-colors duration-300">
-      {/* Top Header bar for landing page */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl pt-safe">
+      {/* Top Header */}
+      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-surface-container pt-safe">
         <div className="h-16 px-margin-mobile md:px-margin-desktop flex items-center justify-between max-w-container-max mx-auto w-full">
-          <div className="flex items-center gap-unit">
+          <div className="flex items-center gap-unit cursor-pointer" onClick={() => navigate('/')}>
             <img 
               alt="Time Pilot Logo" 
               className="h-8 w-auto object-contain" 
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCslErK6s2lCkDNyZ2YOOGLf-JGepN3jvVXxoojPdywhtPyW4YP7jE4ECVYfiqa4gBX8_Np3BR2citj5Tq0wX40thWhDmUKzJq7kwIvjhE5GkPqdXYhWQvxCx6KJAm5qBOWsvUymbI9PHE0a4mWynx9N9ZMq7UTWreCx5BWiznE5LwW5eZfVOgWYpdeztD-NiK3aT1LzPhaHFLuY2k_yrsiHYQUd4N5DmNbnIKfKOliXMKHPVrP1xaH6w"
             />
-            <span className="font-headline-md text-headline-md text-primary font-bold">Time Pilot</span>
+            <span className="font-headline-md text-headline-md text-primary font-bold">TimePilot</span>
           </div>
-          <button 
-            onClick={() => navigate('/signin')}
-            className="text-primary font-semibold hover:underline text-label-md"
-          >
-            Sign In
-          </button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/focus')}
+              className="hidden sm:inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-label-md font-semibold transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">timer</span>
+              Focus Timer
+            </button>
+            <button 
+              onClick={() => navigate('/signin')}
+              className="text-primary font-semibold hover:underline text-label-md"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="flex-1 pt-16 flex flex-col">
         <div className="flex flex-col w-full">
           {/* Hero Section */}
-          <section className="flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-stack-lg min-h-[618px] bg-surface relative overflow-hidden">
+          <section className="flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-stack-lg min-h-[600px] bg-surface relative overflow-hidden text-center">
             {/* Ambient Background Graphic */}
             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
               <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
@@ -51,33 +60,39 @@ export default function LandingPage() {
               </svg>
             </div>
             
-            <div className="z-10 flex flex-col items-center text-center max-w-3xl w-full">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/20 text-on-surface-variant rounded-full text-label-sm mb-stack-md select-none">
+            <div className="z-10 flex flex-col items-center max-w-3xl w-full">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-primary-container/20 border border-primary/20 text-on-surface rounded-full text-label-sm mb-stack-md select-none">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                Now in public beta
+                <span className="font-semibold text-primary">Student-focused time architecture</span>
               </div>
-              <h1 className="text-display md:text-[56px] text-on-surface mb-stack-md leading-tight tracking-tight">
-                Make better use of the time <span className="text-primary">you already have.</span>
+              
+              <h1 className="text-display md:text-[54px] text-on-surface mb-stack-md leading-tight tracking-tight font-bold">
+                TimePilot helps students <span className="text-primary">plan real time,</span> focus on important work, and adjust when plans change.
               </h1>
-              <p className="text-body-lg text-on-surface-variant mb-stack-lg max-w-2xl">
-                Time Pilot helps students understand their available time, plan what matters, stay focused, and make meaningful progress without the overwhelm.
+              
+              <p className="text-body-lg text-on-surface-variant mb-stack-lg max-w-2xl font-medium">
+                Know what to do right now, see how much flexible study time you truly have, and recover seamlessly when today doesn't go as planned.
               </p>
               
+              {/* Primary and Secondary CTAs */}
               <div className="flex flex-col sm:flex-row gap-stack-sm w-full sm:w-auto justify-center items-center">
                 <button 
                   onClick={() => navigate('/onboarding/goals')}
-                  className="bg-primary text-on-primary px-8 py-4 rounded-xl text-label-md font-semibold hover:bg-surface-tint transition-all active:scale-95 shadow-md shadow-primary/20 w-full sm:w-auto"
+                  className="bg-primary text-on-primary px-8 py-4 rounded-xl text-label-md font-bold hover:bg-surface-tint transition-all active:scale-95 shadow-md shadow-primary/20 w-full sm:w-auto flex items-center justify-center gap-2"
                 >
-                  Get Started
+                  Create My Schedule
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
                 <button 
                   onClick={handleSeeHowItWorks}
-                  className="bg-surface text-primary outline outline-1 outline-primary/30 px-8 py-4 rounded-xl text-label-md font-semibold hover:bg-surface-container transition-all active:scale-95 w-full sm:w-auto mt-2 sm:mt-0"
+                  className="bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/40 px-8 py-4 rounded-xl text-label-md font-bold transition-all active:scale-95 w-full sm:w-auto flex items-center justify-center gap-2"
                 >
+                  <span className="material-symbols-outlined text-primary text-[20px]">explore</span>
                   See How It Works
                 </button>
               </div>
-              <p className="mt-4 text-label-md text-on-surface-variant">
+
+              <p className="mt-4 text-label-md text-on-surface-variant font-medium">
                 Already have an account?{' '}
                 <button 
                   onClick={() => navigate('/signin')}
@@ -88,32 +103,74 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Dashboard Preview Mockup */}
-            <div className="mt-stack-lg z-10 w-full max-w-container-max relative perspective-[1000px]">
-              <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl bg-surface-container-highest shadow-xl overflow-hidden group hover:-translate-y-2 transition-transform duration-500 ease-out">
-                {/* Mock UI Header */}
-                <div className="h-10 bg-surface-container border-b border-outline-variant/30 flex items-center px-4 gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-error/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-secondary-container"></div>
-                    <div className="w-3 h-3 rounded-full bg-primary/80"></div>
+            {/* Core Experience Workflow Strip */}
+            <div id="how-it-works-section" className="mt-stack-lg z-10 w-full max-w-4xl pt-8">
+              <div className="text-label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-4">
+                The Core TimePilot Workflow
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                {[
+                  { step: '1', title: 'Commitments', icon: 'schedule', desc: 'Add fixed classes' },
+                  { step: '2', title: 'Plan', icon: 'playlist_add_check', desc: 'Set daily goals' },
+                  { step: '3', title: 'Schedule', icon: 'calendar_month', desc: 'Check true capacity' },
+                  { step: '4', title: 'Focus', icon: 'center_focus_strong', desc: 'Deep work timer' },
+                  { step: '5', title: 'Adapt', icon: 'tune', desc: 'Recover missed tasks' },
+                  { step: '6', title: 'Review', icon: 'insights', desc: 'Weekly reflection' }
+                ].map((item) => (
+                  <div key={item.step} className="bg-surface-container/80 backdrop-blur-md rounded-xl p-3 border border-outline-variant/20 flex flex-col items-center text-center">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-1.5 font-bold text-xs">
+                      <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
+                    </div>
+                    <span className="font-label-sm text-on-surface font-bold text-[13px]">{item.title}</span>
+                    <span className="text-[11px] text-on-surface-variant mt-0.5 leading-tight">{item.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Interactive Dashboard Preview Card */}
+            <div className="mt-stack-lg z-10 w-full max-w-container-max relative">
+              <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-2xl p-4 md:p-6 text-left">
+                {/* Header Mock */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-surface-container">
+                  <div>
+                    <span className="font-label-sm uppercase tracking-wider text-primary font-bold">Live Preview</span>
+                    <h2 className="text-headline-md text-on-surface font-bold">Good afternoon, Ashika</h2>
+                    <p className="text-body-md text-on-surface-variant font-medium">You have 2h 15m of flexible study time today.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => navigate('/dashboard')}
+                      className="bg-primary text-on-primary px-4 py-2 rounded-lg text-label-sm font-bold shadow-sm flex items-center gap-1.5"
+                    >
+                      Open Full Dashboard
+                      <span className="material-symbols-outlined text-[16px]">launch</span>
+                    </button>
                   </div>
                 </div>
-                {/* Mock UI Content */}
-                <div 
-                  className="w-full h-full bg-cover bg-top" 
-                  style={{
-                    backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAc-ktPBh5KppRYS7leub_465uHzPFB6I_r-UNV5Io3HPakKSZFN6Cctr-n2WIrIxlTMXt2EDACdRmZLan_t_iSuHgYjtAMuPqZu9S_t1GqZiHvcjcJ2NLvmdHHD6hYqB_kR2eIR-aV3HekFdQytfUuTzdDaQ79OyWLmjZTmZ-xWax8-r3KajTphO4cLl6d4d65G_E66gbMUVrHl06cJ_YnAL-QYm2I5zHbkf54xWV423jHblR964hdsA')"
-                  }}
-                ></div>
-                {/* Floating Elements */}
-                <div className="absolute bottom-4 right-4 bg-surface-container-lowest p-3 rounded-lg shadow-lg flex items-center gap-3 animate-bounce" style={{ animationDuration: '3s' }}>
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-label-sm text-on-surface font-semibold">Deep Work Complete</div>
-                    <div className="text-[10px] text-on-surface-variant">2 hours logged</div>
+
+                {/* Recommendation Mock Banner */}
+                <div className="mt-4 bg-primary-container text-on-primary-container rounded-xl p-4 md:p-5 relative overflow-hidden">
+                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 relative z-10">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-label-sm font-bold uppercase tracking-wider text-on-primary-container/80">
+                        <span className="material-symbols-outlined text-[16px]">lightbulb</span>
+                        What Should I Do Now?
+                      </div>
+                      <p className="font-headline-lg-mobile text-headline-lg-mobile font-bold mt-1">
+                        You have 50 minutes before your next commitment.
+                      </p>
+                      <p className="text-body-md text-on-primary-container/90 mt-1 font-medium">
+                        Recommended: <strong className="text-on-primary-container">Political Science Revision — 45 min</strong> (High priority • Fits your available time)
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => navigate('/focus')}
+                      className="bg-primary text-on-primary px-6 py-3 rounded-lg text-label-md font-bold shadow-md hover:bg-surface-tint active:scale-95 transition-all shrink-0 flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">play_arrow</span>
+                      Start Focus
+                    </button>
                   </div>
                 </div>
               </div>
@@ -121,105 +178,55 @@ export default function LandingPage() {
           </section>
 
           {/* Features Grid Section */}
-          <section id="features-section" className="py-stack-lg px-margin-mobile md:px-margin-desktop bg-surface-container-low">
+          <section className="py-stack-lg px-margin-mobile md:px-margin-desktop bg-surface-container-low">
             <div className="max-w-container-max mx-auto w-full">
               <div className="text-center mb-stack-lg">
-                <h2 className="text-headline-lg md:text-display text-on-surface mb-unit">Designed for the student workflow</h2>
-                <p className="text-body-lg text-on-surface-variant max-w-2xl mx-auto">Everything you need to manage cognitive labor, built into a quiet, reliable assistant.</p>
+                <h2 className="text-headline-lg md:text-display text-on-surface mb-unit font-bold">
+                  Designed for real student days
+                </h2>
+                <p className="text-body-lg text-on-surface-variant max-w-2xl mx-auto font-medium">
+                  Never get overwhelmed by an unrealistic to-do list. TimePilot respects your real commitments.
+                </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-                {/* Understand Your Time */}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                {/* 1. Realistic Scheduling */}
                 <div className="bg-surface-container-lowest rounded-2xl p-stack-md flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-tertiary-container/10 flex items-center justify-center text-tertiary mb-stack-sm">
-                    <span className="material-symbols-outlined text-headline-md">schedule</span>
+                  <div className="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary mb-stack-sm">
+                    <span className="material-symbols-outlined text-headline-md">balance</span>
                   </div>
-                  <h3 className="text-headline-md text-on-surface mb-unit font-semibold">Understand Your Time</h3>
-                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1">Visualize your week clearly. See exactly how much time you have available between classes, shifts, and life.</p>
-                  <div className="mt-auto bg-surface-container-low rounded-lg p-3 relative overflow-hidden h-32 flex items-end">
-                    {/* Abstract Chart SVG */}
-                    <svg className="w-full h-24 text-tertiary opacity-30" preserveAspectRatio="none" viewBox="0 0 100 40">
-                      <path d="M0,40 L0,20 Q10,10 20,25 T40,15 T60,30 T80,10 T100,20 L100,40 Z" fill="currentColor"></path>
-                    </svg>
-                    <div className="absolute inset-x-0 bottom-0 flex justify-between px-4 pb-2">
-                      <div className="w-8 h-16 bg-tertiary rounded-t-md opacity-80"></div>
-                      <div className="w-8 h-20 bg-surface-variant rounded-t-md"></div>
-                      <div className="w-8 h-12 bg-surface-variant rounded-t-md"></div>
-                      <div className="w-8 h-24 bg-tertiary rounded-t-md opacity-80"></div>
-                      <div className="w-8 h-10 bg-surface-variant rounded-t-md"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Decide What Matters */}
-                <div className="bg-surface-container-lowest rounded-2xl p-stack-md flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary mb-stack-sm">
-                    <span className="material-symbols-outlined text-headline-md">playlist_add_check</span>
-                  </div>
-                  <h3 className="text-headline-md text-on-surface mb-unit font-semibold">Decide What Matters</h3>
-                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1">Prioritize tasks intentionally. Drag and drop assignments into your available blocks to create a realistic plan.</p>
-                  <div className="mt-auto bg-surface-container-low rounded-lg p-3 space-y-2">
-                    <div className="bg-surface-container-lowest p-2 rounded-md shadow-sm flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border-2 border-primary"></div>
-                      <div className="h-2 w-1/2 bg-surface-variant rounded-full"></div>
-                    </div>
-                    <div className="bg-surface-container-lowest p-2 rounded-md shadow-sm flex items-center gap-2 ml-4">
-                      <div className="w-4 h-4 rounded-full border-2 border-outline-variant"></div>
-                      <div className="h-2 w-2/3 bg-surface-variant rounded-full"></div>
-                    </div>
-                    <div className="bg-surface-container-lowest p-2 rounded-md shadow-sm flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border-2 border-outline-variant"></div>
-                      <div className="h-2 w-1/3 bg-surface-variant rounded-full"></div>
-                    </div>
-                  </div>
+                  <h3 className="text-headline-md text-on-surface mb-unit font-bold text-[20px]">
+                    Realistic Scheduling
+                  </h3>
+                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1 font-medium">
+                    TimePilot checks your fixed classes and study capacity. If your day is over capacity, it alerts you and offers clear adjustments.
+                  </p>
                 </div>
 
-                {/* Focus Without Distractions */}
+                {/* 2. Missed-Task Recovery */}
                 <div className="bg-surface-container-lowest rounded-2xl p-stack-md flex flex-col shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary mb-stack-sm">
-                    <span className="material-symbols-outlined text-headline-md">center_focus_strong</span>
+                    <span className="material-symbols-outlined text-headline-md">published_with_changes</span>
                   </div>
-                  <h3 className="text-headline-md text-on-surface mb-unit font-semibold">Focus Without Distractions</h3>
-                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1">Enter a quiet mode during deep work. The interface fades back, leaving only the task at hand and a gentle timer.</p>
-                  <div className="mt-auto bg-surface-container-low rounded-lg p-4 flex items-center justify-center h-32">
-                    <div className="relative w-20 h-20 flex items-center justify-center">
-                      <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-surface-variant" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2"></path>
-                        <path className="text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="75, 100" strokeWidth="2"></path>
-                      </svg>
-                      <span className="text-label-sm font-semibold text-on-surface">25:00</span>
-                    </div>
-                  </div>
+                  <h3 className="text-headline-md text-on-surface mb-unit font-bold text-[20px]">
+                    Non-Punitive Recovery
+                  </h3>
+                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1 font-medium">
+                    Missed a study session? Hit "Recover My Schedule" to reorganize remaining tasks into your evening free blocks without guilt.
+                  </p>
                 </div>
 
-                {/* Learn From Your Week */}
+                {/* 3. Deep Focus & Reflection */}
                 <div className="bg-surface-container-lowest rounded-2xl p-stack-md flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-tertiary-fixed-dim/30 flex items-center justify-center text-on-tertiary-fixed-variant mb-stack-sm">
-                    <span className="material-symbols-outlined text-headline-md">insights</span>
+                  <div className="w-12 h-12 rounded-xl bg-tertiary-container/20 flex items-center justify-center text-tertiary mb-stack-sm">
+                    <span className="material-symbols-outlined text-headline-md">psychology</span>
                   </div>
-                  <h3 className="text-headline-md text-on-surface mb-unit font-semibold">Learn From Your Week</h3>
-                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1">Review your patterns without judgment. See where your time actually went and adjust for next week.</p>
-                  <div className="mt-auto bg-surface-container-low rounded-lg p-4 flex items-center justify-between h-32 gap-2">
-                    <div className="flex-1 h-full flex flex-col justify-end gap-1">
-                      <div className="h-[60%] bg-tertiary-fixed-dim rounded-md"></div>
-                      <div className="text-[10px] text-center text-on-surface-variant">Mon</div>
-                    </div>
-                    <div className="flex-1 h-full flex flex-col justify-end gap-1">
-                      <div className="h-[80%] bg-tertiary-fixed-dim rounded-md"></div>
-                      <div className="text-[10px] text-center text-on-surface-variant">Tue</div>
-                    </div>
-                    <div className="flex-1 h-full flex flex-col justify-end gap-1">
-                      <div className="h-[40%] bg-tertiary-fixed-dim rounded-md"></div>
-                      <div className="text-[10px] text-center text-on-surface-variant">Wed</div>
-                    </div>
-                    <div className="flex-1 h-full flex flex-col justify-end gap-1">
-                      <div className="h-[90%] bg-tertiary-fixed-dim rounded-md"></div>
-                      <div className="text-[10px] text-center text-on-surface-variant">Thu</div>
-                    </div>
-                    <div className="flex-1 h-full flex flex-col justify-end gap-1">
-                      <div className="h-[50%] bg-tertiary-fixed-dim rounded-md"></div>
-                      <div className="text-[10px] text-center text-on-surface-variant">Fri</div>
-                    </div>
-                  </div>
+                  <h3 className="text-headline-md text-on-surface mb-unit font-bold text-[20px]">
+                    AI Coach & Review
+                  </h3>
+                  <p className="text-body-md text-on-surface-variant mb-stack-sm flex-1 font-medium">
+                    Get grounded insights into how your time was spent and context-aware suggestions for balancing exam prep, classes, and life.
+                  </p>
                 </div>
               </div>
             </div>
@@ -228,14 +235,26 @@ export default function LandingPage() {
           {/* Bottom CTA */}
           <section className="py-stack-lg px-margin-mobile md:px-margin-desktop bg-surface text-center">
             <div className="max-w-2xl mx-auto">
-              <h2 class="text-headline-lg md:text-display text-on-surface mb-unit font-bold">Ready to pilot your time?</h2>
-              <p className="text-body-lg text-on-surface-variant mb-stack-md">Join thousands of students who have replaced hustle with intention.</p>
-              <button 
-                onClick={() => navigate('/onboarding/goals')}
-                className="bg-primary text-on-primary px-8 py-4 rounded-xl text-label-md font-semibold hover:bg-surface-tint transition-all active:scale-95 shadow-md shadow-primary/20"
-              >
-                Start Free Trial
-              </button>
+              <h2 className="text-headline-lg md:text-display text-on-surface mb-unit font-bold">
+                Ready to pilot your time?
+              </h2>
+              <p className="text-body-lg text-on-surface-variant mb-stack-md font-medium">
+                Create your realistic schedule in less than two minutes.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
+                <button 
+                  onClick={() => navigate('/onboarding/goals')}
+                  className="bg-primary text-on-primary px-8 py-4 rounded-xl text-label-md font-bold hover:bg-surface-tint transition-all active:scale-95 shadow-md shadow-primary/20"
+                >
+                  Create My Schedule
+                </button>
+                <button 
+                  onClick={() => navigate('/focus')}
+                  className="bg-surface-container text-on-surface px-8 py-4 rounded-xl text-label-md font-bold hover:bg-surface-container-high transition-all active:scale-95 border border-outline-variant/30"
+                >
+                  Try Focus Timer
+                </button>
+              </div>
             </div>
           </section>
         </div>
