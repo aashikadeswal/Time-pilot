@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function LandingPage() {
+export default function LandingPage({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
 
   const handleSeeHowItWorks = (e) => {
@@ -25,7 +25,18 @@ export default function LandingPage() {
             />
             <span className="font-headline-md text-headline-md text-primary font-bold">TimePilot</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {setDarkMode && (
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all active:scale-90"
+                title="Toggle Theme"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {darkMode ? 'light_mode' : 'dark_mode'}
+                </span>
+              </button>
+            )}
             <button 
               onClick={() => navigate('/focus')}
               className="hidden sm:inline-flex items-center gap-1 text-on-surface-variant hover:text-primary text-label-md font-semibold transition-colors"

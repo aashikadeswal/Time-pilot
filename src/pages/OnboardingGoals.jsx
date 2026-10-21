@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTimePilot } from '../context/TimePilotContext';
 
-export default function OnboardingGoals() {
+export default function OnboardingGoals({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
-  const { goals, addGoal } = useTimePilot();
+  const { addGoal } = useTimePilot();
 
   const [selectedGoals, setSelectedGoals] = useState([
     'Political Science Revision',
@@ -56,6 +56,28 @@ export default function OnboardingGoals() {
 
   return (
     <div className="bg-background font-display min-h-screen flex flex-col transition-colors duration-300">
+      {/* Top Header */}
+      <div className="px-margin-mobile md:px-margin-desktop py-3 flex items-center justify-between border-b border-surface-container bg-surface/80 backdrop-blur-md">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Home
+        </button>
+        {setDarkMode && (
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all active:scale-90"
+            title="Toggle Theme"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {darkMode ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
+        )}
+      </div>
+
       {/* Progress Section: Step 1 of 3 */}
       <div className="flex flex-col px-margin-mobile md:px-margin-desktop py-stack-md">
         <div className="flex items-center justify-between mb-unit">
@@ -140,7 +162,22 @@ export default function OnboardingGoals() {
                 className="w-full bg-surface-container-low rounded-lg px-3 py-2.5 text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary/30"
                 autoFocus
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs text-on-surface-variant font-bold">Priority:</span>
+                {['High', 'Med'].map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setSelectedPriority(p)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      selectedPriority === p ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddCustom(false)}

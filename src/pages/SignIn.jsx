@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function SignIn() {
+export default function SignIn({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +15,28 @@ export default function SignIn() {
 
   return (
     <div className="bg-background font-display min-h-screen flex flex-col transition-colors duration-300">
+      {/* Top Bar with Back button and Theme Switcher */}
+      <div className="fixed top-0 w-full z-40 p-4 flex justify-between items-center max-w-4xl mx-auto left-0 right-0">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant hover:text-on-surface px-3 py-1.5 rounded-xl bg-surface-container/60 hover:bg-surface-container backdrop-blur-md transition-all active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Home
+        </button>
+        {setDarkMode && (
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-surface-container/60 hover:bg-surface-container backdrop-blur-md text-on-surface-variant hover:text-on-surface transition-all active:scale-90"
+            title="Toggle Theme"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {darkMode ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
+        )}
+      </div>
+
       <main className="flex-1 flex flex-col">
         <div className="flex flex-col w-full h-full min-h-[100dvh] bg-surface relative justify-center items-center px-6 py-12">
           {/* Subtle ambient background elements */}

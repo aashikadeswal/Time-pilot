@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useTimePilot } from '../context/TimePilotContext';
@@ -20,7 +20,6 @@ export default function Timeline({ darkMode, setDarkMode }) {
   const [name, setName] = useState('');
   const [time, setTime] = useState('16:00');
   const [endTime, setEndTime] = useState('17:00');
-  const [duration, setDuration] = useState('1h');
   const [type, setType] = useState('Fixed');
   const [locationStr, setLocationStr] = useState('');
 
@@ -29,12 +28,46 @@ export default function Timeline({ darkMode, setDarkMode }) {
   const [rescheduleTime, setRescheduleTime] = useState('18:30');
   const [rescheduleDuration, setRescheduleDuration] = useState(30);
 
+  // Delete confirmation modal
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  // Toast feedback
+  const [toastMessage, setToastMessage] = useState(null);
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Live real time
+  const [currentTimeFormatted, setCurrentTimeFormatted] = useState(() => {
+    const d = new Date();
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const d = new Date();
+      setCurrentTimeFormatted(`${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`);
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
   const flexibleMins = getFlexibleMinutesAvailable();
   const flexHours = Math.floor(flexibleMins / 60);
   const flexRemainder = flexibleMins % 60;
 
-  // Mock current simulated time
-  const currentTimeFormatted = "15:45";
+  const calculateDuration = (start, end) => {
+    if (!start || !end) return '1h';
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    let diff = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diff < 0) diff += 24 * 60;
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+  };
 
   const handleAddItem = (e) => {
     e.preventDefault();
@@ -44,7 +77,7 @@ export default function Timeline({ darkMode, setDarkMode }) {
       name: name.trim(),
       time,
       endTime,
-      duration,
+      duration: calculateDuration(time, endTime),
       type,
       location: locationStr
     });
@@ -52,12 +85,21 @@ export default function Timeline({ darkMode, setDarkMode }) {
     setName('');
     setLocationStr('');
     setShowModal(false);
+    showToast(`Added "${name.trim()}" to schedule`);
+  };
+
+  const confirmDeleteCommitment = () => {
+    if (!itemToDelete) return;
+    deleteCommitment(itemToDelete.id);
+    showToast(`Removed "${itemToDelete.name}" from timeline`);
+    setItemToDelete(null);
   };
 
   const handleRescheduleSubmit = (e) => {
     e.preventDefault();
     if (!selectedMissedTask) return;
     rescheduleMissedTask(selectedMissedTask.id, rescheduleTime, rescheduleDuration);
+    showToast(`Rescheduled "${selectedMissedTask.name}" to ${rescheduleTime}`);
     setSelectedMissedTask(null);
   };
 
@@ -72,10 +114,21 @@ export default function Timeline({ darkMode, setDarkMode }) {
     navigate('/focus', { state: { task: matchedTask } });
   };
 
+  // Sort commitments by time
+  const sortedCommitments = [...commitments].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
   return (
     <Layout title="Plan" darkMode={darkMode} setDarkMode={setDarkMode}>
-      <div className="flex flex-col w-full min-h-full pb-24 relative text-left max-w-container-max mx-auto">
+      <div className="flex flex-col w-full min-h-full pb-28 relative text-left max-w-container-max mx-auto animate-fade-in">
         
+        {/* Floating Toast Notification */}
+        {toastMessage && (
+          <div className="fixed top-20 right-6 z-50 bg-primary text-on-primary px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold animate-slide-up">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            {toastMessage}
+          </div>
+        )}
+
         {/* Header Day & Available Focus Capacity Card */}
         <div className="px-margin-mobile pt-stack-md pb-stack-lg flex flex-col gap-unit">
           <div className="flex justify-between items-end">
@@ -86,8 +139,9 @@ export default function Timeline({ darkMode, setDarkMode }) {
             <div className="flex gap-2">
               <button
                 onClick={() => navigate('/planning')}
-                className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-bold text-primary transition-colors"
+                className="px-3.5 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-xs font-bold text-primary transition-all flex items-center gap-1 active:scale-95"
               >
+                <span className="material-symbols-outlined text-sm">checklist</span>
                 Task View
               </button>
             </div>
@@ -114,27 +168,34 @@ export default function Timeline({ darkMode, setDarkMode }) {
           </div>
         </div>
 
+        {/* Current Time Bar Indicator */}
+        <div className="px-margin-mobile mb-3 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-error animate-ping"></span>
+          <span className="text-xs font-bold text-error uppercase tracking-wider">Current Time: {currentTimeFormatted}</span>
+        </div>
+
         {/* Timeline Grid */}
         <div className="flex-1 px-margin-mobile relative">
           {/* Vertical central timeline line */}
           <div className="absolute left-6 top-0 bottom-0 w-px bg-surface-container-highest/60 z-0"></div>
           
           <div className="flex flex-col gap-stack-md pb-stack-lg relative z-10">
-            {commitments.map((item) => {
-              const isPast = item.time < currentTimeFormatted && item.endTime && item.endTime < currentTimeFormatted;
+            {sortedCommitments.map((item, index) => {
+              const isPast = item.endTime ? item.endTime < currentTimeFormatted : item.time < currentTimeFormatted;
               const isCurrent = item.time <= currentTimeFormatted && (!item.endTime || item.endTime >= currentTimeFormatted);
               
               return (
                 <div 
                   key={item.id} 
-                  className={`flex group transition-all hover:translate-x-0.5 ${
+                  className={`flex group transition-all hover:translate-x-1 ${
                     isPast ? 'opacity-65' : ''
                   }`}
+                  style={{ animationDelay: `${index * 40}ms` }}
                 >
                   {/* Time Indicator */}
                   <div className="w-12 pt-1 flex-shrink-0 flex flex-col items-end pr-3 select-none">
                     <span className={`font-label-md text-label-md font-bold ${
-                      isCurrent ? 'text-primary' : 'text-on-surface-variant'
+                      isCurrent ? 'text-primary font-black' : 'text-on-surface-variant'
                     }`}>
                       {item.time}
                     </span>
@@ -142,13 +203,13 @@ export default function Timeline({ darkMode, setDarkMode }) {
                   
                   {/* Visual Timeline Dot */}
                   <div className="relative flex flex-col items-center mr-3 mt-1.5">
-                    <div className={`w-3 h-3 rounded-full ring-4 ring-surface shadow-sm z-10 ${
+                    <div className={`w-3.5 h-3.5 rounded-full ring-4 ring-surface shadow-sm z-10 transition-transform group-hover:scale-125 ${
                       item.type === 'Flexible'
                         ? 'bg-primary'
                         : item.type === 'Rest'
                           ? 'bg-secondary-container'
                           : isCurrent
-                            ? 'bg-primary ring-primary/30'
+                            ? 'bg-primary ring-primary/40'
                             : 'bg-surface-variant'
                     }`}></div>
                   </div>
@@ -176,13 +237,24 @@ export default function Timeline({ darkMode, setDarkMode }) {
                             {item.name}
                           </span>
                           {isCurrent && (
-                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
-                              Current
+                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold animate-pulse">
+                              Now
                             </span>
                           )}
                         </div>
-                        <span className="font-label-sm text-xs text-on-surface-variant font-medium mt-0.5">
-                          {item.type} • {item.duration} {item.location && `• ${item.location}`}
+                        <span className="font-label-sm text-xs text-on-surface-variant font-medium mt-0.5 flex items-center gap-1.5">
+                          <span className="capitalize">{item.type}</span>
+                          <span>•</span>
+                          <span>{item.duration || (item.endTime ? `${item.time} - ${item.endTime}` : '')}</span>
+                          {item.location && (
+                            <>
+                              <span>•</span>
+                              <span className="flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-[13px]">location_on</span>
+                                {item.location}
+                              </span>
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -190,7 +262,7 @@ export default function Timeline({ darkMode, setDarkMode }) {
                     <div className="flex items-center gap-2">
                       {item.type === 'Flexible' && (
                         <button 
-                          onClick={() => handleStartFocusFromTimeline('Flexible Focus Session')}
+                          onClick={() => handleStartFocusFromTimeline(item.name || 'Flexible Focus Session')}
                           className="px-3.5 py-1.5 rounded-xl bg-primary text-on-primary font-label-sm text-xs shadow-sm hover:bg-surface-tint active:scale-95 transition-all font-bold flex items-center gap-1"
                         >
                           <span className="material-symbols-outlined text-[14px]">play_arrow</span>
@@ -199,8 +271,8 @@ export default function Timeline({ darkMode, setDarkMode }) {
                       )}
                       
                       <button 
-                        onClick={() => deleteCommitment(item.id)}
-                        className="text-on-surface-variant hover:text-error hover:bg-error/10 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                        onClick={() => setItemToDelete(item)}
+                        className="text-on-surface-variant hover:text-error hover:bg-error/10 p-1.5 rounded-full opacity-60 group-hover:opacity-100 transition-all"
                         title="Delete block"
                       >
                         <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -216,14 +288,14 @@ export default function Timeline({ darkMode, setDarkMode }) {
 
         {/* MISSED TASK RECOVERY SECTION */}
         {tasks.some(t => t.missed) && (
-          <div className="px-margin-mobile my-4">
+          <div className="px-margin-mobile my-4 animate-fade-in-up">
             <div className="bg-error/10 border border-error/30 rounded-2xl p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2 text-error font-bold text-sm">
                 <span className="material-symbols-outlined text-lg">error_outline</span>
                 You missed a planned session
               </div>
               {tasks.filter(t => t.missed).map(t => (
-                <div key={t.id} className="bg-surface-container rounded-xl p-3 flex justify-between items-center">
+                <div key={t.id} className="bg-surface-container rounded-xl p-3 flex justify-between items-center flex-wrap gap-2">
                   <div>
                     <h4 className="font-body-md text-on-surface font-bold text-sm">{t.name}</h4>
                     <span className="text-xs text-on-surface-variant">Original: {t.scheduledTime} ({t.duration}m)</span>
@@ -231,13 +303,16 @@ export default function Timeline({ darkMode, setDarkMode }) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedMissedTask(t)}
-                      className="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-bold"
+                      className="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-bold hover:bg-surface-tint transition-colors active:scale-95"
                     >
                       Reschedule
                     </button>
                     <button
-                      onClick={() => moveTaskToTomorrow(t.id)}
-                      className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant text-xs font-semibold"
+                      onClick={() => {
+                        moveTaskToTomorrow(t.id);
+                        showToast(`Moved "${t.name}" to tomorrow`);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant text-xs font-semibold hover:bg-surface-container-highest transition-colors active:scale-95"
                     >
                       Tomorrow
                     </button>
@@ -251,17 +326,56 @@ export default function Timeline({ darkMode, setDarkMode }) {
         {/* Floating Add Time Block Button */}
         <button 
           onClick={() => setShowModal(true)}
-          className="fixed bottom-24 right-margin-mobile w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center active:scale-90 hover:scale-105 transition-all z-50 hover:shadow-primary/20"
+          className="fixed bottom-24 right-margin-mobile w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center active:scale-90 hover:scale-105 transition-all z-40 hover:shadow-primary/30"
           title="Add Time Block"
         >
           <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
         </button>
 
+        {/* DELETE CONFIRMATION MODAL */}
+        {itemToDelete && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
+            <div className="bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4 animate-scale-in">
+              <div className="flex items-center gap-3 text-error">
+                <span className="material-symbols-outlined text-2xl">delete_forever</span>
+                <h3 className="text-headline-md text-on-surface font-bold text-lg">Remove Time Block?</h3>
+              </div>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Are you sure you want to remove <strong>"{itemToDelete.name}"</strong> ({itemToDelete.time}) from your timeline?
+              </p>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setItemToDelete(null)}
+                  className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteCommitment}
+                  className="px-4 py-2 text-xs font-bold bg-error text-on-error rounded-lg shadow-sm hover:bg-error/90"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ADD TIME BLOCK MODAL */}
         {showModal && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
-            <div className="bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4">
-              <h2 className="text-headline-md text-on-surface font-bold text-[18px]">Add Time Block</h2>
+            <div className="bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4 animate-scale-in">
+              <div className="flex justify-between items-center">
+                <h2 className="text-headline-md text-on-surface font-bold text-[18px]">Add Time Block</h2>
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="text-on-surface-variant hover:text-on-surface p-1 rounded-full"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
               
               <form onSubmit={handleAddItem} className="space-y-3">
                 <div className="space-y-1">
@@ -354,7 +468,7 @@ export default function Timeline({ darkMode, setDarkMode }) {
         {/* RESCHEDULE MISSED TASK MODAL */}
         {selectedMissedTask && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
-            <div className="bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4 animate-scale-in">
               <h3 className="text-headline-md text-on-surface font-bold text-[18px]">Reschedule Session</h3>
               <p className="text-xs text-on-surface-variant font-medium">
                 Fit a shorter session for <strong>{selectedMissedTask.name}</strong> into your remaining flexible time today.

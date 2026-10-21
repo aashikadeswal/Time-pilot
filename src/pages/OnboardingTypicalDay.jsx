@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTimePilot } from '../context/TimePilotContext';
 
-export default function OnboardingTypicalDay() {
+export default function OnboardingTypicalDay({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const { commitments, addCommitment, deleteCommitment, getFlexibleMinutesAvailable } = useTimePilot();
 
@@ -55,8 +55,30 @@ export default function OnboardingTypicalDay() {
       {/* Step 2 of 3 Header Progress */}
       <div className="px-margin-mobile pt-margin-mobile pb-stack-sm z-10 sticky top-0 bg-surface/90 backdrop-blur-md border-b border-surface-container">
         <div className="flex items-center justify-between mb-unit">
-          <span className="text-label-md text-primary font-bold">Step 2 of 3</span>
-          <span className="text-label-md text-outline font-semibold">Typical Day & Fixed Blocks</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/onboarding/goals')}
+              className="text-xs font-bold text-on-surface-variant hover:text-on-surface flex items-center gap-1"
+              title="Back"
+            >
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            </button>
+            <span className="text-label-md text-primary font-bold">Step 2 of 3</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-label-md text-outline font-semibold">Typical Day & Fixed Blocks</span>
+            {setDarkMode && (
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all active:scale-90"
+                title="Toggle Theme"
+              >
+                <span className="material-symbols-outlined text-[15px]">
+                  {darkMode ? 'light_mode' : 'dark_mode'}
+                </span>
+              </button>
+            )}
+          </div>
         </div>
         <div className="w-full h-[4px] bg-surface-container rounded-full overflow-hidden">
           <div className="h-full bg-primary rounded-full transition-all duration-500 ease-out" style={{ width: '66.6%' }}></div>

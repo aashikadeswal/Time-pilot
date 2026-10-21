@@ -30,6 +30,16 @@ export default function Settings({ darkMode, setDarkMode }) {
   // Edit Goal Modal
   const [editingGoal, setEditingGoal] = useState(null);
 
+  // Delete Goal Confirmation Modal
+  const [goalToDelete, setGoalToDelete] = useState(null);
+
+  // Toast feedback
+  const [toastMessage, setToastMessage] = useState(null);
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   // Edit Profile Modal
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [userName, setUserName] = useState(user.name);
@@ -47,6 +57,7 @@ export default function Settings({ darkMode, setDarkMode }) {
       due: newGoalDue
     });
 
+    showToast(`Created goal "${newGoalName.trim()}"`);
     setNewGoalName('');
     setShowAddGoalModal(false);
   };
@@ -61,17 +72,32 @@ export default function Settings({ darkMode, setDarkMode }) {
       targetHoursPerWeek: Number(editingGoal.targetHoursPerWeek),
       due: editingGoal.due
     });
+    showToast(`Updated goal "${editingGoal.name}"`);
     setEditingGoal(null);
+  };
+
+  const confirmDeleteGoal = () => {
+    if (!goalToDelete) return;
+    deleteGoal(goalToDelete.id);
+    showToast(`Deleted goal "${goalToDelete.name}"`);
+    setGoalToDelete(null);
+  };
+
+  const handleTogglePause = (goal) => {
+    toggleGoalPause(goal.id);
+    showToast(goal.status === 'paused' ? `Resumed "${goal.name}"` : `Paused "${goal.name}"`);
   };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
     setUser({ ...user, name: userName.trim(), email: userEmail.trim() });
+    showToast('Profile updated');
     setShowEditProfile(false);
   };
 
   const handleToggleSetting = (key) => {
     setSettings({ ...settings, [key]: !settings[key] });
+    showToast('Preference updated');
   };
 
   const handleLogout = () => {
@@ -80,8 +106,16 @@ export default function Settings({ darkMode, setDarkMode }) {
 
   return (
     <Layout title={activeTab === 'goals' ? 'Goals' : 'Settings'} darkMode={darkMode} setDarkMode={setDarkMode}>
-      <div className="flex flex-col w-full pb-16 text-left max-w-xl mx-auto animate-fade-in">
+      <div className="flex flex-col w-full pb-16 text-left max-w-xl mx-auto animate-fade-in relative">
         
+        {/* Floating Toast Notification */}
+        {toastMessage && (
+          <div className="fixed top-20 right-6 z-50 bg-primary text-on-primary px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold animate-slide-up">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            {toastMessage}
+          </div>
+        )}
+
         {/* Top Tab Pill Selector (Goals | Settings) */}
         <div className="px-margin-mobile pt-stack-sm pb-stack-sm flex gap-2 overflow-x-auto">
           <button 
@@ -158,7 +192,7 @@ export default function Settings({ darkMode, setDarkMode }) {
 
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => toggleGoalPause(goal.id)}
+                          onClick={() => handleTogglePause(goal)}
                           className="text-on-surface-variant hover:text-on-surface p-1 rounded-full text-xs font-bold"
                           title={isPaused ? 'Resume Goal' : 'Pause Goal'}
                         >
@@ -174,7 +208,7 @@ export default function Settings({ darkMode, setDarkMode }) {
                           <span className="material-symbols-outlined text-base">edit</span>
                         </button>
                         <button
-                          onClick={() => deleteGoal(goal.id)}
+                          onClick={() => setGoalToDelete(goal)}
                           className="text-on-surface-variant hover:text-error p-1 rounded-full text-xs"
                           title="Delete Goal"
                         >
@@ -577,6 +611,37 @@ export default function Settings({ darkMode, setDarkMode }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE GOAL CONFIRMATION MODAL */}
+      {goalToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
+          <div className="bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4 animate-scale-in">
+            <div className="flex items-center gap-3 text-error">
+              <span className="material-symbols-outlined text-2xl">delete_forever</span>
+              <h3 className="text-headline-md text-on-surface font-bold text-lg">Delete Goal?</h3>
+            </div>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Are you sure you want to delete <strong>"{goalToDelete.name}"</strong>? This will remove all associated target stats.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setGoalToDelete(null)}
+                className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteGoal}
+                className="px-4 py-2 text-xs font-bold bg-error text-on-error rounded-lg shadow-sm hover:bg-error/90"
+              >
+                Delete Goal
+              </button>
+            </div>
           </div>
         </div>
       )}

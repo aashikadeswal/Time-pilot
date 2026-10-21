@@ -36,6 +36,8 @@ export default function FocusSummary({ darkMode, setDarkMode }) {
     'Hunger / Need Break'
   ];
 
+  const [toastMessage, setToastMessage] = useState(null);
+
   const handleSave = () => {
     logFocusSession({
       category: sessionData.category || 'Deep Focus',
@@ -50,7 +52,10 @@ export default function FocusSummary({ darkMode, setDarkMode }) {
       toggleTaskCompleted(sessionData.task.id);
     }
 
-    navigate('/dashboard');
+    setToastMessage('Session saved!');
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 400);
   };
 
   // Focus History Stats
@@ -220,6 +225,16 @@ export default function FocusSummary({ darkMode, setDarkMode }) {
             ))}
           </div>
         </section>
+
+        {/* TOAST FEEDBACK */}
+        {toastMessage && (
+          <div className="toast-container">
+            <div className="animate-toast-in bg-inverse-surface text-inverse-on-surface px-5 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+              {toastMessage}
+            </div>
+          </div>
+        )}
 
       </div>
     </Layout>

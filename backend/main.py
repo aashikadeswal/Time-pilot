@@ -5,10 +5,10 @@ import time
 
 try:
     from .database import db
-    from .models import TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
+    from .models import GoalModel, TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
 except (ImportError, ValueError):
     from database import db
-    from models import TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
+    from models import GoalModel, TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
 
 app = FastAPI(title="Time Pilot Backend API")
 
@@ -71,6 +71,16 @@ async def seed_if_empty():
             "sender": "coach",
             "text": "Hello Sam! I'm your Time Pilot Coach. I can help you analyze your schedule, manage capacity, or jump into a focus session. What's on your mind today?"
         })
+
+    # Check Goals
+    goals_count = await db.goals.count_documents({})
+    if goals_count == 0:
+        await db.goals.insert_many([
+            {"id": "g-1", "name": "Political Science Revision", "category": "Studies", "priority": "High", "progress": 78, "due": "Nov 15", "status": "active", "focusLoggedMinutes": 7440, "streakDays": 5, "targetHoursPerWeek": 15, "icon": "school"},
+            {"id": "g-2", "name": "SSC Preparation", "category": "Competitive Exams", "priority": "High", "progress": 64, "due": "Dec 01", "status": "active", "focusLoggedMinutes": 2520, "streakDays": 3, "targetHoursPerWeek": 10, "icon": "menu_book"},
+            {"id": "g-3", "name": "Health & Fitness", "category": "Personal", "priority": "Med", "progress": 52, "due": "Ongoing", "status": "active", "focusLoggedMinutes": 1080, "streakDays": 4, "targetHoursPerWeek": 5, "icon": "fitness_center"},
+            {"id": "g-4", "name": "Research Paper Methodology", "category": "Thesis", "priority": "Med", "progress": 40, "due": "Nov 30", "status": "active", "focusLoggedMinutes": 1800, "streakDays": 2, "targetHoursPerWeek": 8, "icon": "article"}
+        ])
 
 @app.get("/")
 @app.get("/health")
@@ -210,3 +220,32 @@ async def send_coach_message(user_msg: ChatMessageModel):
     cursor = db.chat_history.find({}, {"_id": 0})
     messages = await cursor.to_list(length=100)
     return [ChatMessageModel(**m) for m in messages]
+
+
+# ----------------- Goals Endpoints -----------------
+@app.get("/api/goals", response_model=List[GoalModel])
+async def get_goals():
+    cursor = db.goals.find({}, {"_id": 0})
+    goals = await cursor.to_list(length=100)
+    return [GoalModel(**g) for g in goals]
+
+@app.post("/api/goals", response_model=GoalModel)
+async def create_goal(goal: GoalModel):
+    await db.goals.update_one({"id": goal.id}, {"$set": goal.model_dump() if hasattr(goal, 'model_dump') else goal.dict()}, upsert=True)
+    return goal
+
+@app.put("/api/goals/{goal_id}", response_model=GoalModel)
+async def update_goal(goal_id: str, updated_goal: GoalModel):
+    payload = updated_goal.model_dump() if hasattr(updated_goal, 'model_dump') else updated_goal.dict()
+    result = await db.goals.update_one({"id": goal_id}, {"$set": payload})
+    if result.matched_count == 0:
+        await db.goals.insert_one(payload)
+    return updated_goal
+
+@app.delete("/api/goals/{goal_id}")
+async def delete_goal(goal_id: str):
+    result = await db.goals.delete_one({"id": goal_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"message": "Goal deleted successfully"}
+

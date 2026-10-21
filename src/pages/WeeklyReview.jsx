@@ -7,16 +7,54 @@ export default function WeeklyReview({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const { user, focusHistory, goals } = useTimePilot();
 
-  // Weekly Stats calculation
+  // 1. Real Focus Stats calculation from focusHistory
   const totalFocusSecs = focusHistory.reduce((sum, f) => sum + (f.secondsLogged || 0), 0);
-  const totalFocusMins = Math.round(totalFocusSecs / 60) || 520; // 8h 40m fallback
+  const totalFocusMins = Math.round(totalFocusSecs / 60);
   const completedHours = Math.floor(totalFocusMins / 60);
   const completedMins = totalFocusMins % 60;
 
-  const plannedHours = 10;
-  const plannedMins = 30;
+  // 2. Weekly Targets from Goals
+  const totalTargetHours = goals.reduce((sum, g) => sum + (Number(g.targetHoursPerWeek) || 0), 0) || 12;
+  const totalTargetMins = totalTargetHours * 60;
+  const completionPercentage = totalTargetMins > 0 
+    ? Math.min(100, Math.round((totalFocusMins / totalTargetMins) * 100))
+    : 0;
 
-  const topGoal = goals[0]?.name || 'Political Science Revision';
+  // 3. Sessions & Averages
+  const sessionCount = focusHistory.length;
+  const avgSessionMins = sessionCount > 0 ? Math.round(totalFocusMins / sessionCount) : 0;
+
+  // 4. Calculate Top Goal & Goal Breakdowns
+  const goalMinutesMap = {};
+  focusHistory.forEach(f => {
+    const key = f.goalId || f.category || 'General';
+    goalMinutesMap[key] = (goalMinutesMap[key] || 0) + Math.round((f.secondsLogged || 0) / 60);
+  });
+
+  let topGoalName = 'No goals active';
+  let topGoalMins = 0;
+
+  goals.forEach(g => {
+    const mins = goalMinutesMap[g.id] || goalMinutesMap[g.name] || 0;
+    if (mins >= topGoalMins) {
+      topGoalMins = mins;
+      topGoalName = g.name;
+    }
+  });
+
+  if (topGoalMins === 0 && goals.length > 0) {
+    topGoalName = goals[0].name;
+  }
+
+  // 5. Unique active days in history
+  const uniqueDates = new Set();
+  focusHistory.forEach(f => {
+    if (f.timestamp) {
+      uniqueDates.add(f.timestamp.split(',')[0]);
+    }
+  });
+  const activeDaysCount = Math.min(7, Math.max(uniqueDates.size, sessionCount > 0 ? 1 : 0));
+  const consistencyPercent = Math.round((activeDaysCount / 7) * 100);
 
   return (
     <Layout title="Review" darkMode={darkMode} setDarkMode={setDarkMode}>
@@ -42,10 +80,14 @@ export default function WeeklyReview({ darkMode, setDarkMode }) {
             <div className="flex flex-col gap-1 z-10">
               <span className="text-xs uppercase tracking-wider font-bold text-primary-fixed-dim">Weekly Grounded Insight</span>
               <p className="font-headline-md text-base md:text-lg font-bold">
-                You planned {plannedHours}h {plannedMins}m and completed {completedHours}h {completedMins}m.
+                You planned {totalTargetHours}h target and completed {completedHours}h {completedMins}m of logged focus.
               </p>
               <p className="text-xs md:text-sm text-on-primary-container/85 font-medium">
-                Your strongest consistency was during weekday afternoons between 4 PM and 7 PM.
+                {completionPercentage >= 70 
+                  ? "Outstanding consistency! You are well aligned with your core learning goals."
+                  : sessionCount > 0 
+                    ? "Great momentum starting off. Focus on protecting consistent 45-minute afternoon windows."
+                    : "No focus logged yet this week. Start a 25-minute Pomodoro session to kickstart your progress!"}
               </p>
             </div>
           </div>
@@ -56,7 +98,7 @@ export default function WeeklyReview({ darkMode, setDarkMode }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             
             {/* Planned vs Completed */}
-            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20">
+            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-1.5 text-primary text-xs font-bold uppercase tracking-wider">
                 <span className="material-symbols-outlined text-sm">schedule</span>
                 Focus Logged
@@ -66,56 +108,100 @@ export default function WeeklyReview({ darkMode, setDarkMode }) {
               </div>
               <div>
                 <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full rounded-full" style={{ width: '82%' }}></div>
+                  <div 
+                    className="bg-primary h-full rounded-full transition-all duration-700" 
+                    style={{ width: `${completionPercentage}%` }}
+                  ></div>
                 </div>
                 <span className="text-[11px] text-on-surface-variant mt-1 block font-medium">
-                  82% of planned target
+                  {completionPercentage}% of {totalTargetHours}h target
                 </span>
               </div>
             </div>
 
             {/* Completed Sessions */}
-            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20">
+            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-1.5 text-secondary text-xs font-bold uppercase tracking-wider">
                 <span className="material-symbols-outlined text-sm">check_circle</span>
                 Sessions Done
               </div>
               <div className="font-display text-2xl md:text-3xl font-bold text-on-surface my-2">
-                {Math.max(focusHistory.length, 14)}<span className="text-sm font-normal text-on-surface-variant"> sessions</span>
+                {sessionCount}<span className="text-sm font-normal text-on-surface-variant"> {sessionCount === 1 ? 'session' : 'sessions'}</span>
               </div>
               <span className="text-[11px] text-on-surface-variant font-medium">
-                Avg 42 mins per session
+                {avgSessionMins > 0 ? `Avg ${avgSessionMins} mins per session` : 'Start your first session'}
               </span>
             </div>
 
             {/* Consistency */}
-            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20">
+            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-1.5 text-tertiary text-xs font-bold uppercase tracking-wider">
                 <span className="material-symbols-outlined text-sm">bolt</span>
                 Consistency
               </div>
               <div className="font-display text-2xl md:text-3xl font-bold text-on-surface my-2">
-                85<span className="text-lg font-normal text-on-surface-variant">%</span>
+                {consistencyPercent}<span className="text-lg font-normal text-on-surface-variant">%</span>
               </div>
               <span className="text-[11px] text-on-surface-variant font-medium">
-                5 out of 7 days on track
+                {activeDaysCount} of 7 days active
               </span>
             </div>
 
             {/* Most Used Goal */}
-            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20">
+            <div className="bg-surface-container rounded-2xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-1.5 text-on-surface-variant text-xs font-bold uppercase tracking-wider">
                 <span className="material-symbols-outlined text-sm">flag</span>
                 Top Goal
               </div>
               <div className="font-headline-md text-base font-bold text-on-surface my-2 line-clamp-1">
-                {topGoal}
+                {topGoalName}
               </div>
               <span className="text-[11px] text-primary font-bold">
-                6.5 hrs focused
+                {topGoalMins > 0 ? `${(topGoalMins / 60).toFixed(1)} hrs focused` : 'Awaiting data'}
               </span>
             </div>
 
+          </div>
+        </section>
+
+        {/* Goal-Specific Breakdown Section */}
+        <section className="px-margin-mobile flex flex-col gap-3">
+          <h3 className="font-label-sm text-xs text-on-surface-variant uppercase tracking-widest pl-1 font-bold">
+            Goal Progress Breakdown
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {goals.map(goal => {
+              const loggedMinutes = goalMinutesMap[goal.id] || goalMinutesMap[goal.name] || 0;
+              const loggedHours = (loggedMinutes / 60).toFixed(1);
+              const targetH = Number(goal.targetHoursPerWeek) || 10;
+              const pct = Math.min(100, Math.round((loggedMinutes / (targetH * 60)) * 100));
+
+              return (
+                <div key={goal.id} className="bg-surface-container rounded-2xl p-4 flex flex-col gap-2.5 border border-outline-variant/20 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-body-md text-on-surface font-bold text-sm">{goal.name}</h4>
+                      <span className="text-xs text-on-surface-variant">{goal.category} • Priority: {goal.priority}</span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      {pct}%
+                    </span>
+                  </div>
+                  <div>
+                    <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-primary h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] text-on-surface-variant mt-1.5 font-medium">
+                      <span>{loggedHours}h completed</span>
+                      <span>Target: {targetH}h/wk</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -146,7 +232,7 @@ export default function WeeklyReview({ darkMode, setDarkMode }) {
               </div>
               <div>
                 <p className="font-body-md text-on-surface font-bold text-sm">
-                  2 sessions were rescheduled gracefully.
+                  Adaptive scheduling kept you resilient.
                 </p>
                 <p className="text-xs text-on-surface-variant mt-0.5 font-medium">
                   Using "Recover My Schedule" prevented study backlog without causing burnout.

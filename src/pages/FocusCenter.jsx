@@ -17,18 +17,42 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
   };
 
   const [selectedTask, setSelectedTask] = useState(passedTask);
-  const [mode, setMode] = useState('countdown'); // countdown, stopwatch, pomodoro
+  const [mode, setMode] = useState('countdown'); // countdown, stopwatch, pomodoro, break
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [seconds, setSeconds] = useState((passedTask.duration || 30) * 60);
   const [totalSeconds, setTotalSeconds] = useState((passedTask.duration || 30) * 60);
+  const [showEncouragement, setShowEncouragement] = useState('');
 
   const timerRef = useRef(null);
+
+  // Play gentle completion chime with Web Audio API
+  const playGentleChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.2);
+    } catch {
+      // Audio not supported or blocked
+    }
+  };
 
   const getDefaults = (m) => {
     if (m === 'countdown') return { s: (selectedTask.duration || 45) * 60 };
     if (m === 'stopwatch') return { s: 0 };
     if (m === 'pomodoro') return { s: 1500 }; // 25 min
+    if (m === 'break') return { s: 300 }; // 5 min break
     return { s: 1800 };
   };
 
@@ -63,17 +87,27 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
   const handleStart = () => {
     setIsRunning(true);
     setIsPaused(false);
-    
-    // Hide standard layout header and navbar for deep focus
-    const nav = document.querySelector('nav');
-    const header = document.querySelector('header');
-    if (nav) nav.style.transform = 'translateY(100%)';
-    if (header) header.style.transform = 'translateY(-100%)';
   };
 
   const handlePause = () => {
-    setIsPaused(!isPaused);
+    setIsPaused(prev => !prev);
   };
+
+  // Spacebar shortcut to pause/play
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        if (!isRunning) {
+          handleStart();
+        } else {
+          handlePause();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRunning, isPaused]);
 
   const handleStop = (completed = false) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -85,14 +119,20 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
       elapsed = totalSeconds - seconds;
     }
 
-    // Restore standard layout elements
-    const nav = document.querySelector('nav');
-    const header = document.querySelector('header');
-    if (nav) nav.style.transform = 'translateY(0)';
-    if (header) header.style.transform = 'translateY(0)';
+    if (completed) {
+      playGentleChime();
+    }
 
     setIsRunning(false);
     setIsPaused(false);
+
+    // If it was just a break, reset back to pomodoro
+    if (mode === 'break') {
+      setMode('pomodoro');
+      setSeconds(1500);
+      setTotalSeconds(1500);
+      return;
+    }
 
     // Navigate to summary page
     navigate('/focus/summary', { 
@@ -106,6 +146,12 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
     });
   };
 
+  const handleStopRef = useRef(handleStop);
+  useEffect(() => {
+    handleStopRef.current = handleStop;
+  });
+
+  // Timer Tick
   useEffect(() => {
     if (isRunning && !isPaused) {
       timerRef.current = setInterval(() => {
@@ -113,9 +159,21 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
           if (mode === 'stopwatch') {
             return prev + 1;
           } else {
+            // Milestone encouragements
+            const elapsed = totalSeconds - prev;
+            if (totalSeconds > 60) {
+              if (elapsed === Math.floor(totalSeconds * 0.5)) {
+                setShowEncouragement('Halfway through! Keep your momentum.');
+                setTimeout(() => setShowEncouragement(''), 4000);
+              } else if (elapsed === Math.floor(totalSeconds * 0.75)) {
+                setShowEncouragement('Final stretch! Stay locked in.');
+                setTimeout(() => setShowEncouragement(''), 4000);
+              }
+            }
+
             if (prev <= 1) {
               clearInterval(timerRef.current);
-              handleStop(true);
+              if (handleStopRef.current) handleStopRef.current(true);
               return 0;
             }
             return prev - 1;
@@ -129,7 +187,7 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning, isPaused, mode]);
+  }, [isRunning, isPaused, mode, totalSeconds]);
 
   const formatTime = (totalSecs) => {
     const m = Math.floor(totalSecs / 60);
@@ -146,7 +204,7 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
 
   return (
     <Layout title="Focus" darkMode={darkMode} setDarkMode={setDarkMode}>
-      <div className="flex flex-col w-full h-full relative items-center justify-center min-h-[72vh] pb-12 select-none text-center">
+      <div className="flex flex-col w-full h-full relative items-center justify-center min-h-[72vh] pb-12 select-none text-center animate-fade-in">
         
         {/* Ambient Immersive Background Glow */}
         <div 
@@ -154,9 +212,19 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
             isRunning ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
           }`}
           style={{
-            background: 'radial-gradient(circle, rgba(2,100,93,0.35) 0%, rgba(18,20,19,0.95) 75%)'
+            background: mode === 'break'
+              ? 'radial-gradient(circle, rgba(94, 98, 173, 0.25) 0%, rgba(18,20,19,0.95) 75%)'
+              : 'radial-gradient(circle, rgba(2,100,93,0.3) 0%, rgba(18,20,19,0.95) 75%)'
           }}
         ></div>
+
+        {/* Milestone Encouragement Banner */}
+        {showEncouragement && (
+          <div className="absolute top-2 z-30 bg-primary-container text-on-primary-container px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-slide-up flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm">stars</span>
+            {showEncouragement}
+          </div>
+        )}
 
         <div className="z-10 flex flex-col items-center w-full max-w-md gap-stack-md relative">
           
@@ -166,30 +234,30 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
               isRunning ? 'opacity-0 -translate-y-6 pointer-events-none' : 'opacity-100 translate-y-0'
             }`}
           >
-            {['countdown', 'stopwatch', 'pomodoro'].map((m) => (
+            {['countdown', 'stopwatch', 'pomodoro', 'break'].map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => handleModeChange(m)}
-                className={`flex-1 py-2 text-label-sm rounded-full capitalize font-bold transition-all duration-300 ${
+                className={`flex-1 py-2 text-label-sm rounded-full capitalize font-bold transition-all duration-300 text-xs ${
                   mode === m 
                     ? 'bg-primary text-on-primary shadow-sm' 
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                {m}
+                {m === 'break' ? '5m Break' : m}
               </button>
             ))}
           </div>
 
           {/* Current Task Selector / Card */}
           {!isRunning ? (
-            <div className="w-full bg-surface-container/70 border border-outline-variant/30 rounded-2xl p-4 flex flex-col gap-2">
+            <div className="w-full bg-surface-container/70 border border-outline-variant/30 rounded-2xl p-4 flex flex-col gap-2 text-left">
               <span className="text-[11px] uppercase tracking-wider text-primary font-bold">Current Target</span>
               <select
                 value={selectedTask.id}
                 onChange={(e) => handleTaskChange(e.target.value)}
-                className="w-full bg-surface-container text-on-surface font-bold text-base rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                className="w-full bg-surface-container text-on-surface font-bold text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
               >
                 {tasks.map(t => (
                   <option key={t.id} value={t.id}>
@@ -204,11 +272,13 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
             </div>
           ) : (
             <div className="animate-fade-in flex flex-col items-center">
-              <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
-                {selectedTask.category || 'Deep Focus'}
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                mode === 'break' ? 'bg-secondary/20 text-secondary' : 'bg-primary/20 text-primary'
+              }`}>
+                {mode === 'break' ? 'Recovery Break' : (selectedTask.category || 'Deep Focus')}
               </span>
               <h2 className="text-headline-md text-on-surface font-bold mt-2 text-[20px]">
-                {selectedTask.name}
+                {mode === 'break' ? 'Rest Your Eyes & Hydrate' : selectedTask.name}
               </h2>
             </div>
           )}
@@ -230,7 +300,9 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
                     strokeWidth="1.5"
                   ></path>
                   <path 
-                    className="text-primary transition-all duration-1000 ease-linear" 
+                    className={`transition-all duration-1000 ease-linear ${
+                      mode === 'break' ? 'text-secondary' : 'text-primary'
+                    }`} 
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
                     fill="none" 
                     stroke="currentColor" 
@@ -245,21 +317,24 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
               {/* Display Digits */}
               <div className="relative flex flex-col items-center z-10">
                 <span className={`font-display text-[64px] font-bold tracking-tight transition-colors ${
-                  isRunning ? 'text-primary' : 'text-on-surface'
+                  isRunning ? (mode === 'break' ? 'text-secondary' : 'text-primary') : 'text-on-surface'
                 }`}>
                   {formatTime(seconds)}
                 </span>
                 <span className={`font-label-sm text-xs uppercase tracking-widest mt-1 font-bold ${
                   isRunning ? 'text-primary' : 'text-on-surface-variant'
                 }`}>
-                  {isPaused ? 'PAUSED' : isRunning ? 'IN FOCUS' : mode.toUpperCase()}
+                  {isPaused ? 'PAUSED' : isRunning ? (mode === 'break' ? 'RESTING' : 'IN FOCUS') : mode.toUpperCase()}
+                </span>
+                <span className="text-[10px] text-on-surface-variant/60 font-semibold mt-1">
+                  Press Space to {isRunning ? (isPaused ? 'resume' : 'pause') : 'start'}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Quick Select Preset Times */}
-          {!isRunning && mode !== 'stopwatch' && (
+          {!isRunning && mode !== 'stopwatch' && mode !== 'break' && (
             <div className="flex gap-2 flex-wrap justify-center relative z-20 animate-fade-in">
               {[15, 25, 30, 45, 60].map((mins) => (
                 <button
@@ -283,7 +358,7 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
               <button
                 onClick={handleStart}
                 className="w-20 h-20 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(2,100,93,0.3)] hover:shadow-[0_12px_40px_rgba(2,100,93,0.4)] transition-all duration-500 ease-out active:scale-90 hover:scale-105"
-                title="Start Focus Session"
+                title="Start Focus Session (Space)"
               >
                 <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                   play_arrow
@@ -295,7 +370,7 @@ export default function FocusCenter({ darkMode, setDarkMode }) {
                 <button
                   onClick={handlePause}
                   className="w-14 h-14 bg-surface-container-highest/80 hover:bg-surface-container-highest text-on-surface rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
-                  title={isPaused ? 'Resume' : 'Pause'}
+                  title={isPaused ? 'Resume (Space)' : 'Pause (Space)'}
                 >
                   <span className="material-symbols-outlined text-[24px]">
                     {isPaused ? 'play_arrow' : 'pause'}

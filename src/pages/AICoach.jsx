@@ -18,7 +18,13 @@ export default function AICoach({ darkMode, setDarkMode }) {
 
   const [inputMsg, setInputMsg] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
   const chatEndRef = useRef(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   const capacity = getCapacityStatus();
   const rec = getRecommendation();
@@ -40,6 +46,11 @@ export default function AICoach({ darkMode, setDarkMode }) {
     setIsTyping(false);
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    showToast('Copied advice to clipboard');
+  };
+
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -58,12 +69,21 @@ export default function AICoach({ darkMode, setDarkMode }) {
   const handleQuickRecover = () => {
     recoverSchedule('smart_balance');
     sendChatMessage("I've applied 1-Click Schedule Recovery. How does my day look now?");
+    showToast('Applied 1-Click Recovery');
   };
 
   return (
     <Layout title="AI" darkMode={darkMode} setDarkMode={setDarkMode}>
-      <div className="flex flex-col w-full h-[calc(100vh-140px)] justify-between relative text-left max-w-2xl mx-auto">
+      <div className="flex flex-col w-full h-[calc(100vh-140px)] justify-between relative text-left max-w-2xl mx-auto animate-fade-in">
         
+        {/* Floating Toast Notification */}
+        {toastMessage && (
+          <div className="fixed top-20 right-6 z-50 bg-primary text-on-primary px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold animate-slide-up">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            {toastMessage}
+          </div>
+        )}
+
         {/* Context Awareness Top Bar */}
         <div className="bg-surface-container rounded-xl p-3 mb-2 flex items-center justify-between border border-outline-variant/20 shadow-sm flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -76,7 +96,7 @@ export default function AICoach({ darkMode, setDarkMode }) {
             {capacity.isOverCapacity && (
               <button
                 onClick={handleQuickRecover}
-                className="text-[11px] bg-secondary text-on-secondary font-bold px-2.5 py-1 rounded-lg hover:bg-secondary/90 transition-colors"
+                className="text-[11px] bg-secondary text-on-secondary font-bold px-2.5 py-1 rounded-lg hover:bg-secondary/90 transition-colors active:scale-95"
                 title="Reorganize remaining tasks"
               >
                 1-Click Recovery
@@ -85,7 +105,7 @@ export default function AICoach({ darkMode, setDarkMode }) {
             {rec && (
               <button
                 onClick={handleQuickFocus}
-                className="text-[11px] bg-primary text-on-primary font-bold px-2.5 py-1 rounded-lg hover:bg-surface-tint transition-colors"
+                className="text-[11px] bg-primary text-on-primary font-bold px-2.5 py-1 rounded-lg hover:bg-surface-tint transition-colors active:scale-95"
               >
                 Focus Next: {rec.title.slice(0, 16)}...
               </button>
@@ -100,7 +120,7 @@ export default function AICoach({ darkMode, setDarkMode }) {
             return (
               <div 
                 key={msg.id} 
-                className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in group`}
               >
                 <div 
                   className={`max-w-[85%] rounded-2xl p-4 shadow-sm relative text-sm ${
@@ -112,6 +132,19 @@ export default function AICoach({ darkMode, setDarkMode }) {
                   <p className="whitespace-pre-line leading-relaxed">
                     {msg.text}
                   </p>
+                  
+                  {!isUser && (
+                    <div className="flex justify-end pt-2 mt-1 border-t border-outline-variant/20">
+                      <button
+                        onClick={() => copyToClipboard(msg.text)}
+                        className="text-[11px] text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors opacity-70 hover:opacity-100"
+                        title="Copy advice"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                        Copy
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );

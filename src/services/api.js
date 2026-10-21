@@ -18,6 +18,13 @@ const defaultCommitments = [
   { id: '7', time: '23:00', name: 'Sleep', type: 'Rest', duration: '8h', color: 'bg-secondary-container', line: 'bg-secondary-container', ring: '', opacity: 'opacity-70' }
 ];
 
+const defaultGoals = [
+  { id: 'g-1', name: 'Political Science Revision', category: 'Studies', priority: 'High', progress: 78, due: 'Nov 15', status: 'active', focusLoggedMinutes: 7440, streakDays: 5, targetHoursPerWeek: 15, icon: 'school' },
+  { id: 'g-2', name: 'SSC Preparation', category: 'Competitive Exams', priority: 'High', progress: 64, due: 'Dec 01', status: 'active', focusLoggedMinutes: 2520, streakDays: 3, targetHoursPerWeek: 10, icon: 'menu_book' },
+  { id: 'g-3', name: 'Health & Fitness', category: 'Personal', priority: 'Med', progress: 52, due: 'Ongoing', status: 'active', focusLoggedMinutes: 1080, streakDays: 4, targetHoursPerWeek: 5, icon: 'fitness_center' },
+  { id: 'g-4', name: 'Research Paper Methodology', category: 'Thesis', priority: 'Med', progress: 40, due: 'Nov 30', status: 'active', focusLoggedMinutes: 1800, streakDays: 2, targetHoursPerWeek: 8, icon: 'article' }
+];
+
 const defaultFocusHistory = [
   { id: '1', category: 'Mathematics', secondsLogged: 2520, completed: true, sentiment: 'Okay', timestamp: 'Just now' },
   { id: '2', category: 'Political Science', secondsLogged: 1800, completed: true, sentiment: 'Easy', timestamp: '2 hrs ago' },
@@ -43,7 +50,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/tasks`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend tasks endpoint offline, using local mock tasks.');
       return defaultTasks;
     }
@@ -58,7 +65,7 @@ export const api = {
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend tasks offline, task saved locally.');
       return task;
     }
@@ -73,7 +80,7 @@ export const api = {
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend tasks offline, task updated locally.');
       return updatedTask;
     }
@@ -84,7 +91,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend tasks offline, task deleted locally.');
       return { success: true };
     }
@@ -96,7 +103,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/commitments`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend commitments endpoint offline, using local mock commitments.');
       return defaultCommitments;
     }
@@ -111,7 +118,7 @@ export const api = {
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend commitments offline, commitment saved locally.');
       return commitment;
     }
@@ -122,8 +129,61 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/commitments/${commitmentId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend commitments offline, commitment deleted locally.');
+      return { success: true };
+    }
+  },
+
+  // --- Goals API ---
+  async fetchGoals() {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals`);
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals endpoint offline, using local mock goals.');
+      return defaultGoals;
+    }
+  },
+
+  async saveGoal(goal) {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(goal)
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals offline, goal saved locally.');
+      return goal;
+    }
+  },
+
+  async updateGoal(goalId, updatedGoal) {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals/${goalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedGoal)
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals offline, goal updated locally.');
+      return updatedGoal;
+    }
+  },
+
+  async deleteGoal(goalId) {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals/${goalId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals offline, goal deleted locally.');
       return { success: true };
     }
   },
@@ -134,7 +194,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/focus/history`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend focus endpoint offline, using local mock focus history.');
       return defaultFocusHistory;
     }
@@ -149,7 +209,7 @@ export const api = {
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend focus offline, session logged locally.');
       return session;
     }
@@ -161,7 +221,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/coach/messages`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend chat endpoint offline, using local mock chat history.');
       return defaultChatHistory;
     }
@@ -176,7 +236,7 @@ export const api = {
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend coach offline, chat handled locally.');
       // Simulated client-side response fallback
       const text_lower = (userMsg.text || '').toLowerCase();
@@ -196,7 +256,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/api/settings`);
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend settings endpoint offline, using local mock settings.');
       return defaultSettings;
     }
@@ -211,7 +271,7 @@ export const api = {
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
-    } catch (e) {
+    } catch {
       console.warn('FastAPI backend settings offline, settings saved locally.');
       return settings;
     }

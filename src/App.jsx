@@ -18,16 +18,22 @@ import WeeklyReview from './pages/WeeklyReview';
 import Settings from './pages/Settings';
 
 export default function App() {
-  // Dark mode state: default to dark theme
-  const [darkMode, setDarkMode] = useState(true);
+  // Dark mode state: load from localStorage, fallback to system preference, then dark
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('timepilot_theme');
+    if (saved !== null) return saved === 'dark';
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return false;
+    return true;
+  });
 
-  // Sync dark mode class on document element
+  // Sync dark mode class on document element and persist to localStorage
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('timepilot_theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   return (
@@ -35,13 +41,13 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           {/* Landing and Auth */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/signin" element={<SignIn />} />
+          <Route path="/" element={<LandingPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
+          <Route path="/signin" element={<SignIn darkMode={darkMode} setDarkMode={setDarkMode} />} />
           
           {/* Onboarding 3-Step Flow */}
-          <Route path="/onboarding/goals" element={<OnboardingGoals />} />
-          <Route path="/onboarding/typical-day" element={<OnboardingTypicalDay />} />
-          <Route path="/onboarding/schedule" element={<OnboardingSchedule />} />
+          <Route path="/onboarding/goals" element={<OnboardingGoals darkMode={darkMode} setDarkMode={setDarkMode} />} />
+          <Route path="/onboarding/typical-day" element={<OnboardingTypicalDay darkMode={darkMode} setDarkMode={setDarkMode} />} />
+          <Route path="/onboarding/schedule" element={<OnboardingSchedule darkMode={darkMode} setDarkMode={setDarkMode} />} />
           
           {/* Authenticated Application Views */}
           <Route path="/dashboard" element={<Dashboard darkMode={darkMode} setDarkMode={setDarkMode} />} />
