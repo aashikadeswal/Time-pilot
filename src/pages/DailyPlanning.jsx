@@ -18,12 +18,17 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
     setActiveFocusTask
   } = useTimePilot();
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskDate, setTaskDate] = useState('today'); // 'today' | 'tomorrow' | YYYY-MM-DD
   const [priority, setPriority] = useState('High');
   const [duration, setDuration] = useState(45);
   const [category, setCategory] = useState('Studies');
   const [type, setType] = useState('Flexible');
   const [isFocused, setIsFocused] = useState(false);
+  const [taskView, setTaskView] = useState('today'); // 'today' | 'upcoming' | 'completed'
 
   // Edit modal
   const [editingTask, setEditingTask] = useState(null);
@@ -37,10 +42,20 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
   const flexHours = Math.floor(flexibleMins / 60);
   const flexRemainder = flexibleMins % 60;
 
-  const todayTasks = tasks.filter(t => t.scheduledDate !== 'tomorrow');
-  const tomorrowTasks = tasks.filter(t => t.scheduledDate === 'tomorrow');
-  const completedToday = todayTasks.filter(t => t.completed).length;
-  const totalToday = todayTasks.length;
+  // Filter tasks into Today, Upcoming, and Completed
+  const isTaskToday = (t) => {
+    return t.scheduledDate === 'today' || t.scheduledDate === todayStr || (!t.scheduledDate && t.scheduledDate !== 'tomorrow');
+  };
+
+  const isTaskUpcoming = (t) => {
+    return t.scheduledDate === 'tomorrow' || (t.scheduledDate && t.scheduledDate > todayStr);
+  };
+
+  const todayTasks = tasks.filter(t => isTaskToday(t) && !t.completed);
+  const upcomingTasks = tasks.filter(t => isTaskUpcoming(t) && !t.completed);
+  const completedTasks = tasks.filter(t => t.completed);
+  const totalToday = tasks.filter(t => isTaskToday(t)).length;
+  const completedToday = tasks.filter(t => isTaskToday(t) && t.completed).length;
 
   const showToast = (msg) => {
     setToast(msg);
@@ -53,16 +68,21 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
 
     addTask({
       name: taskName.trim(),
+      description: taskDescription.trim(),
+      scheduledDate: taskDate,
       priority,
       duration: Number(duration),
       category,
       type,
-      scheduledTime: '16:00'
+      scheduledTime: '16:00',
+      completed: false,
     });
 
     setTaskName('');
+    setTaskDescription('');
+    setTaskDate('today');
     setIsFocused(false);
-    showToast('Task added');
+    showToast('Task created successfully');
   };
 
   const handleSaveEdit = (e) => {
@@ -70,10 +90,13 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
     if (!editingTask) return;
     updateTask(editingTask.id, {
       name: editingTask.name,
+      description: editingTask.description || '',
+      scheduledDate: editingTask.scheduledDate || 'today',
       priority: editingTask.priority,
       duration: Number(editingTask.duration),
       category: editingTask.category,
-      type: editingTask.type
+      type: editingTask.type,
+      completed: Boolean(editingTask.completed),
     });
     setEditingTask(null);
     showToast('Task updated');
@@ -95,6 +118,8 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
     toggleTaskCompleted(taskId);
     if (task && !task.completed) {
       showToast(`"${task.name}" completed ✓`);
+    } else {
+      showToast(`"${task?.name}" marked incomplete`);
     }
   };
 
@@ -126,12 +151,12 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
 
         {/* Task Creation */}
         <section className="relative z-10">
-          <div className="bg-surface-container rounded-2xl shadow-sm p-4 flex flex-col gap-4 transition-all duration-300 focus-within:shadow-md border border-outline-variant/15 focus-within:border-primary/20">
+          <div className="bg-surface-container rounded-2xl shadow-sm p-4 flex flex-col gap-3 transition-all duration-300 focus-within:shadow-md border border-outline-variant/15 focus-within:border-primary/20">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-xl">add_circle</span>
               <input 
                 className="w-full bg-transparent text-base text-on-surface placeholder-on-surface-variant/50 focus:outline-none" 
-                placeholder="Add a new task or study session..." 
+                placeholder="Add a new daily task or study session..." 
                 type="text"
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
@@ -139,62 +164,84 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
               />
             </div>
-            
+
             {(isFocused || taskName) && (
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-variant/15 animate-fade-in">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <select 
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
-                  >
-                    <option value="High">🔴 High Priority</option>
-                    <option value="Med">🟡 Med Priority</option>
-                    <option value="Low">🟢 Low Priority</option>
-                  </select>
+              <div className="flex flex-col gap-3 pt-3 border-t border-outline-variant/15 animate-fade-in">
+                {/* Description field */}
+                <input
+                  type="text"
+                  placeholder="Add a description or notes (optional)..."
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-xs text-on-surface placeholder-on-surface-variant/50 focus:outline-none"
+                />
 
-                  <select 
-                    value={duration}
-                    onChange={(e) => setDuration(Number(e.target.value))}
-                    className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
-                  >
-                    <option value={15}>15m</option>
-                    <option value={30}>30m</option>
-                    <option value={45}>45m</option>
-                    <option value={60}>60m (1h)</option>
-                    <option value={90}>90m (1.5h)</option>
-                    <option value={120}>120m (2h)</option>
-                  </select>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Date Selector */}
+                    <select
+                      value={taskDate}
+                      onChange={(e) => setTaskDate(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
+                    >
+                      <option value="today">📅 Today</option>
+                      <option value="tomorrow">📅 Tomorrow</option>
+                    </select>
 
-                  <select 
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
-                  >
-                    <option value="Studies">Studies</option>
-                    <option value="Competitive Exams">Competitive Exams</option>
-                    <option value="Thesis">Thesis</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Personal">Personal</option>
-                  </select>
+                    <select 
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
+                    >
+                      <option value="High">🔴 High Priority</option>
+                      <option value="Med">🟡 Med Priority</option>
+                      <option value="Low">🟢 Low Priority</option>
+                    </select>
 
-                  <select 
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
+                    <select 
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
+                    >
+                      <option value={15}>15m</option>
+                      <option value={30}>30m</option>
+                      <option value={45}>45m</option>
+                      <option value={60}>60m (1h)</option>
+                      <option value={90}>90m (1.5h)</option>
+                      <option value={120}>120m (2h)</option>
+                    </select>
+
+                    <select 
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
+                    >
+                      <option value="Studies">Studies</option>
+                      <option value="Competitive Exams">Competitive Exams</option>
+                      <option value="Thesis">Thesis</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Personal">Personal</option>
+                    </select>
+
+                    <select 
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none"
+                    >
+                      <option value="Flexible">Flexible (Study)</option>
+                      <option value="Fixed">Fixed (Class)</option>
+                      <option value="Personal">Personal (Gym)</option>
+                    </select>
+                  </div>
+                  
+                  <button 
+                    onClick={handleAddTask}
+                    className="w-9 h-9 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-md hover:bg-surface-tint active:scale-90 transition-all shrink-0"
+                    title="Add Task"
                   >
-                    <option value="Flexible">Flexible (Study)</option>
-                    <option value="Fixed">Fixed (Class)</option>
-                    <option value="Personal">Personal (Gym)</option>
-                  </select>
+                    <span className="material-symbols-outlined text-lg">arrow_upward</span>
+                  </button>
                 </div>
-                
-                <button 
-                  onClick={handleAddTask}
-                  className="w-9 h-9 flex items-center justify-center bg-primary text-on-primary rounded-full shadow-md hover:bg-surface-tint active:scale-90 transition-all shrink-0"
-                >
-                  <span className="material-symbols-outlined text-lg">arrow_upward</span>
-                </button>
               </div>
             )}
           </div>
@@ -280,172 +327,377 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
           </div>
         </section>
 
-        {/* Tasks List */}
+        {/* Tasks View Selector & Controls */}
         <section className="flex flex-col gap-3">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg text-on-surface font-bold">
-              Today's Tasks ({todayTasks.filter(t => !t.completed).length})
-            </h2>
-            <button
-              onClick={() => recoverSchedule('smart_balance')}
-              className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[14px]">auto_awesome</span> Rebalance
-            </button>
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            {/* View Filter Pills */}
+            <div className="flex items-center gap-1.5 p-1 bg-surface-container rounded-xl">
+              <button
+                onClick={() => setTaskView('today')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  taskView === 'today'
+                    ? 'bg-surface-container-high text-on-surface shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                Today ({todayTasks.length})
+              </button>
+              <button
+                onClick={() => setTaskView('upcoming')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  taskView === 'upcoming'
+                    ? 'bg-surface-container-high text-on-surface shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                Upcoming ({upcomingTasks.length})
+              </button>
+              <button
+                onClick={() => setTaskView('completed')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  taskView === 'completed'
+                    ? 'bg-surface-container-high text-on-surface shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                Completed ({completedTasks.length})
+              </button>
+            </div>
+
+            {taskView === 'today' && todayTasks.length > 0 && (
+              <button
+                onClick={() => recoverSchedule('smart_balance')}
+                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[14px]">auto_awesome</span> Rebalance
+              </button>
+            )}
           </div>
           
+          {/* Active List based on Tab */}
           <div className="flex flex-col gap-2">
-            {todayTasks.map((task, idx) => {
-              const isHigh = task.priority === 'High';
-              const isMed = task.priority === 'Med';
-              const borderCol = isHigh ? 'bg-error' : isMed ? 'bg-secondary' : 'bg-outline-variant';
-              const textCol = isHigh ? 'text-error' : isMed ? 'text-secondary' : 'text-on-surface-variant';
+            {/* TODAY'S TASKS VIEW */}
+            {taskView === 'today' && (
+              <>
+                {todayTasks.map((task, idx) => {
+                  const isHigh = task.priority === 'High';
+                  const isMed = task.priority === 'Med';
+                  const borderCol = isHigh ? 'bg-error' : isMed ? 'bg-secondary' : 'bg-outline-variant';
+                  const textCol = isHigh ? 'text-error' : isMed ? 'text-secondary' : 'text-on-surface-variant';
 
-              return (
-                <div 
-                  key={task.id} 
-                  className={`group bg-surface-container-lowest rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all hover:shadow-sm border border-outline-variant/10 animate-fade-in-up ${
-                    task.completed ? 'opacity-50' : ''
-                  }`}
-                  style={{ animationDelay: `${idx * 0.04}s` }}
-                >
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${borderCol}`}></div>
-                  
-                  <div className="flex gap-3 items-start pl-1">
-                    {/* Checkbox */}
-                    <button 
-                      onClick={() => handleToggleComplete(task.id)}
-                      className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center hover:border-primary transition-all ${
-                        task.completed 
-                          ? 'bg-primary border-primary text-on-primary' 
-                          : 'border-outline-variant hover:bg-primary/5'
-                      }`}
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="group bg-surface-container-lowest rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all hover:shadow-sm border border-outline-variant/10 animate-fade-in-up"
+                      style={{ animationDelay: `${idx * 0.04}s` }}
                     >
-                      {task.completed && (
-                        <span className="material-symbols-outlined text-on-primary text-[13px] font-bold animate-check-pop">check</span>
-                      )}
-                    </button>
-                    
-                    {/* Content */}
-                    <div className="flex flex-col flex-1 gap-1 min-w-0">
-                      <span className={`text-sm md:text-[15px] text-on-surface font-bold leading-snug ${
-                        task.completed ? 'line-through text-on-surface-variant' : ''
-                      }`}>
-                        {task.name}
-                      </span>
+                      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${borderCol}`}></div>
                       
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 text-[11px]">
-                        <span className={`flex items-center gap-0.5 font-bold ${textCol}`}>
-                          <span className="material-symbols-outlined text-[12px]">flag</span> {task.priority}
-                        </span>
-                        <span className="flex items-center gap-0.5 text-on-surface-variant font-semibold">
-                          <span className="material-symbols-outlined text-[12px]">schedule</span> {task.duration}m
-                        </span>
-                        <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-bold text-[10px]">
-                          {task.category}
-                        </span>
-                        {task.rescheduled && (
-                          <span className="text-secondary font-bold">Adjusted</span>
-                        )}
+                      <div className="flex gap-3 items-start pl-1">
+                        {/* Complete Checkbox */}
+                        <button 
+                          onClick={() => handleToggleComplete(task.id)}
+                          className="mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center border-outline-variant hover:border-primary hover:bg-primary/5 transition-all"
+                          title="Mark task completed"
+                        >
+                          {task.completed && (
+                            <span className="material-symbols-outlined text-primary text-[13px] font-bold animate-check-pop">check</span>
+                          )}
+                        </button>
+                        
+                        {/* Content */}
+                        <div className="flex flex-col flex-1 gap-1 min-w-0">
+                          <span className="text-sm md:text-[15px] text-on-surface font-bold leading-snug">
+                            {task.name}
+                          </span>
+
+                          {task.description && (
+                            <p className="text-xs text-on-surface-variant leading-relaxed">
+                              {task.description}
+                            </p>
+                          )}
+                          
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 text-[11px]">
+                            <span className={`flex items-center gap-0.5 font-bold ${textCol}`}>
+                              <span className="material-symbols-outlined text-[12px]">flag</span> {task.priority}
+                            </span>
+                            <span className="flex items-center gap-0.5 text-on-surface-variant font-semibold">
+                              <span className="material-symbols-outlined text-[12px]">schedule</span> {task.duration}m
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-bold text-[10px]">
+                              {task.category}
+                            </span>
+                            {task.rescheduled && (
+                              <span className="text-secondary font-bold">Adjusted</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 self-center shrink-0">
+                          <button
+                            onClick={() => handleStartFocus(task)}
+                            className="px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-on-primary transition-colors flex items-center gap-0.5"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">play_arrow</span>
+                            <span className="hidden sm:inline">Focus</span>
+                          </button>
+                          <button
+                            onClick={() => moveTaskToTomorrow(task.id)}
+                            className="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant text-[11px] font-semibold hidden sm:inline-flex"
+                            title="Move to tomorrow"
+                          >
+                            → Tmrw
+                          </button>
+                          <button
+                            onClick={() => setEditingTask({ ...task })}
+                            className="text-on-surface-variant hover:text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit task"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className={`p-1 rounded-lg transition-all ${
+                              confirmDeleteId === task.id 
+                                ? 'bg-error/10 text-error opacity-100' 
+                                : 'text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100'
+                            }`}
+                            title={confirmDeleteId === task.id ? 'Click again to confirm' : 'Delete'}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">
+                              {confirmDeleteId === task.id ? 'delete_forever' : 'delete'}
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 self-center shrink-0">
-                      {!task.completed && (
-                        <button
-                          onClick={() => handleStartFocus(task)}
-                          className="px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-on-primary transition-colors flex items-center gap-0.5"
-                        >
-                          <span className="material-symbols-outlined text-[13px]">play_arrow</span>
-                          <span className="hidden sm:inline">Focus</span>
-                        </button>
-                      )}
-                      <button
-                        onClick={() => moveTaskToTomorrow(task.id)}
-                        className="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant text-[11px] font-semibold hidden sm:inline-flex"
-                        title="Move to tomorrow"
+                {todayTasks.length === 0 && (
+                  <div className="bg-surface-container rounded-2xl p-8 text-center text-on-surface-variant border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-3xl text-outline mb-2">event_available</span>
+                    <p className="text-base text-on-surface font-bold">No tasks planned for today</p>
+                    <p className="text-sm mt-1">Use the input above to manually add your tasks for today.</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* UPCOMING TASKS VIEW */}
+            {taskView === 'upcoming' && (
+              <>
+                {upcomingTasks.map((task, idx) => {
+                  const isHigh = task.priority === 'High';
+                  const isMed = task.priority === 'Med';
+                  const borderCol = isHigh ? 'bg-error' : isMed ? 'bg-secondary' : 'bg-outline-variant';
+
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="group bg-surface-container-lowest rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all hover:shadow-sm border border-outline-variant/10 animate-fade-in-up"
+                      style={{ animationDelay: `${idx * 0.04}s` }}
+                    >
+                      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${borderCol}`}></div>
+                      
+                      <div className="flex gap-3 items-start pl-1">
+                        <button 
+                          onClick={() => handleToggleComplete(task.id)}
+                          className="mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center border-outline-variant hover:border-primary hover:bg-primary/5 transition-all"
+                          title="Mark task completed"
+                        />
+                        
+                        <div className="flex flex-col flex-1 gap-1 min-w-0">
+                          <span className="text-sm md:text-[15px] text-on-surface font-bold leading-snug">
+                            {task.name}
+                          </span>
+
+                          {task.description && (
+                            <p className="text-xs text-on-surface-variant leading-relaxed">
+                              {task.description}
+                            </p>
+                          )}
+                          
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 text-[11px]">
+                            <span className="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container font-bold text-[10px]">
+                              📅 {task.scheduledDate === 'tomorrow' ? 'Tomorrow' : task.scheduledDate}
+                            </span>
+                            <span className="flex items-center gap-0.5 text-on-surface-variant font-semibold">
+                              <span className="material-symbols-outlined text-[12px]">schedule</span> {task.duration}m
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-bold text-[10px]">
+                              {task.category}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 self-center shrink-0">
+                          <button
+                            onClick={() => updateTask(task.id, { scheduledDate: 'today' })}
+                            className="px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary hover:text-on-primary transition-colors flex items-center gap-0.5"
+                            title="Move to Today"
+                          >
+                            Move to Today
+                          </button>
+                          <button
+                            onClick={() => setEditingTask({ ...task })}
+                            className="text-on-surface-variant hover:text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit task"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="p-1 rounded-lg text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100"
+                            title="Delete"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {upcomingTasks.length === 0 && (
+                  <div className="bg-surface-container rounded-2xl p-8 text-center text-on-surface-variant border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-3xl text-outline mb-2">schedule</span>
+                    <p className="text-base text-on-surface font-bold">No upcoming tasks</p>
+                    <p className="text-sm mt-1">Tasks scheduled for tomorrow or future dates will appear here.</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* COMPLETED TASKS VIEW */}
+            {taskView === 'completed' && (
+              <>
+                {completedTasks.map((task, idx) => (
+                  <div 
+                    key={task.id} 
+                    className="group bg-surface-container-lowest/80 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden transition-all hover:shadow-sm border border-outline-variant/10 animate-fade-in-up"
+                    style={{ animationDelay: `${idx * 0.04}s` }}
+                  >
+                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-emerald-500"></div>
+                    
+                    <div className="flex gap-3 items-start pl-1">
+                      <button 
+                        onClick={() => handleToggleComplete(task.id)}
+                        className="mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center bg-emerald-500 border-emerald-500 text-white transition-all"
+                        title="Mark incomplete"
                       >
-                        → Tmrw
+                        <span className="material-symbols-outlined text-[13px] font-bold">check</span>
                       </button>
-                      <button
-                        onClick={() => setEditingTask(task)}
-                        className="text-on-surface-variant hover:text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Edit"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTask(task.id)}
-                        className={`p-1 rounded-lg transition-all ${
-                          confirmDeleteId === task.id 
-                            ? 'bg-error/10 text-error opacity-100' 
-                            : 'text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100'
-                        }`}
-                        title={confirmDeleteId === task.id ? 'Click again to confirm' : 'Delete'}
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          {confirmDeleteId === task.id ? 'delete_forever' : 'delete'}
+                      
+                      <div className="flex flex-col flex-1 gap-1 min-w-0">
+                        <span className="text-sm md:text-[15px] font-bold leading-snug line-through text-on-surface-variant">
+                          {task.name}
                         </span>
-                      </button>
+
+                        {task.description && (
+                          <p className="text-xs text-on-surface-variant/70 leading-relaxed">
+                            {task.description}
+                          </p>
+                        )}
+                        
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 text-[11px]">
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
+                            Completed ✓
+                          </span>
+                          <span className="text-on-surface-variant font-medium">
+                            {task.duration}m • {task.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 self-center shrink-0">
+                        <button
+                          onClick={() => handleToggleComplete(task.id)}
+                          className="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant text-[11px] font-semibold"
+                          title="Re-open task"
+                        >
+                          Re-open
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="p-1 rounded-lg text-on-surface-variant hover:text-error"
+                          title="Delete"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                ))}
 
-            {todayTasks.length === 0 && (
-              <div className="bg-surface-container rounded-2xl p-8 text-center text-on-surface-variant border border-outline-variant/10">
-                <span className="material-symbols-outlined text-3xl text-outline mb-2">event_available</span>
-                <p className="text-base text-on-surface font-bold">No tasks planned for today</p>
-                <p className="text-sm mt-1">Add a new study session above to build your plan.</p>
-              </div>
+                {completedTasks.length === 0 && (
+                  <div className="bg-surface-container rounded-2xl p-8 text-center text-on-surface-variant border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-3xl text-outline mb-2">task_alt</span>
+                    <p className="text-base text-on-surface font-bold">No completed tasks yet</p>
+                    <p className="text-sm mt-1">Complete your study sessions to see your progress here.</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </section>
-
-        {/* Tomorrow's Tasks */}
-        {tomorrowTasks.length > 0 && (
-          <section className="flex flex-col gap-2 mt-2 animate-fade-in">
-            <h3 className="text-base text-on-surface-variant font-bold">
-              Moved to Tomorrow ({tomorrowTasks.length})
-            </h3>
-            <div className="space-y-2">
-              {tomorrowTasks.map((task) => (
-                <div key={task.id} className="bg-surface-container/60 rounded-xl p-3.5 flex items-center justify-between border border-outline-variant/10">
-                  <div className="min-w-0">
-                    <span className="text-sm text-on-surface font-semibold truncate block">{task.name}</span>
-                    <span className="text-xs text-on-surface-variant">{task.duration}m • {task.priority}</span>
-                  </div>
-                  <button
-                    onClick={() => updateTask(task.id, { scheduledDate: 'today' })}
-                    className="px-3 py-1 rounded-lg bg-surface-container-high text-primary text-xs font-bold hover:bg-surface-container-highest shrink-0"
-                  >
-                    Move to Today
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
 
-      {/* EDIT MODAL */}
+      {/* EDIT TASK MODAL */}
       {editingTask && (
-        <div className="modal-backdrop text-left" onClick={() => setEditingTask(null)}>
-          <div className="modal-content bg-surface-container-lowest max-w-sm w-full rounded-2xl p-6 shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
+          <div className="bg-surface-container-lowest max-w-md w-full rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="text-lg text-on-surface font-bold">Edit Task</h3>
             
             <form onSubmit={handleSaveEdit} className="space-y-3">
               <div>
-                <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Task Name</label>
+                <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Task Title</label>
                 <input
                   type="text"
                   required
                   value={editingTask.name}
                   onChange={(e) => setEditingTask({ ...editingTask, name: e.target.value })}
-                  className="w-full bg-surface-container-low rounded-xl px-4 py-2.5 text-on-surface text-sm"
+                  className="w-full bg-surface-container-low rounded-xl px-4 py-2.5 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  value={editingTask.description || ''}
+                  onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+                  placeholder="Task notes or details..."
+                  className="w-full bg-surface-container-low rounded-xl px-4 py-2 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Date</label>
+                  <select
+                    value={editingTask.scheduledDate || 'today'}
+                    onChange={(e) => setEditingTask({ ...editingTask, scheduledDate: e.target.value })}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  >
+                    <option value="today">📅 Today</option>
+                    <option value="tomorrow">📅 Tomorrow</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Priority</label>
+                  <select
+                    value={editingTask.priority}
+                    onChange={(e) => setEditingTask({ ...editingTask, priority: e.target.value })}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  >
+                    <option value="High">🔴 High Priority</option>
+                    <option value="Med">🟡 Medium Priority</option>
+                    <option value="Low">🟢 Low Priority</option>
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -454,33 +706,61 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
                   <select
                     value={editingTask.duration}
                     onChange={(e) => setEditingTask({ ...editingTask, duration: Number(e.target.value) })}
-                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm"
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
                   >
                     <option value={15}>15 mins</option>
                     <option value={30}>30 mins</option>
                     <option value={45}>45 mins</option>
-                    <option value={60}>60 mins</option>
-                    <option value={90}>90 mins</option>
-                    <option value={120}>120 mins</option>
+                    <option value={60}>60 mins (1h)</option>
+                    <option value={90}>90 mins (1.5h)</option>
+                    <option value={120}>120 mins (2h)</option>
                   </select>
                 </div>
+
                 <div>
-                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Priority</label>
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Category</label>
                   <select
-                    value={editingTask.priority}
-                    onChange={(e) => setEditingTask({ ...editingTask, priority: e.target.value })}
-                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm"
+                    value={editingTask.category || 'Studies'}
+                    onChange={(e) => setEditingTask({ ...editingTask, category: e.target.value })}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
                   >
-                    <option value="High">🔴 High</option>
-                    <option value="Med">🟡 Medium</option>
-                    <option value="Low">🟢 Low</option>
+                    <option value="Studies">Studies</option>
+                    <option value="Competitive Exams">Competitive Exams</option>
+                    <option value="Thesis">Thesis</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Personal">Personal</option>
                   </select>
                 </div>
               </div>
 
+              {/* Completion status checkbox */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="task-completed-check"
+                  checked={Boolean(editingTask.completed)}
+                  onChange={(e) => setEditingTask({ ...editingTask, completed: e.target.checked })}
+                  className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="task-completed-check" className="text-xs font-semibold text-on-surface cursor-pointer">
+                  Mark as completed
+                </label>
+              </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/15">
-                <button type="button" onClick={() => setEditingTask(null)} className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-lg">Cancel</button>
-                <button type="submit" className="px-5 py-2 text-xs font-bold bg-primary text-on-primary rounded-lg shadow-sm hover:bg-surface-tint active:scale-95 transition-all">Save Changes</button>
+                <button 
+                  type="button" 
+                  onClick={() => setEditingTask(null)} 
+                  className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-5 py-2 text-xs font-bold bg-primary text-on-primary rounded-lg shadow-sm hover:bg-surface-tint active:scale-95 transition-all"
+                >
+                  Save Changes
+                </button>
               </div>
             </form>
           </div>
@@ -489,8 +769,8 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
 
       {/* TOAST */}
       {toast && (
-        <div className="toast-container">
-          <div className="animate-toast-in bg-inverse-surface text-inverse-on-surface px-5 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2">
+        <div className="fixed top-20 right-6 z-50 animate-slide-up">
+          <div className="bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px]">check_circle</span>
             {toast}
           </div>

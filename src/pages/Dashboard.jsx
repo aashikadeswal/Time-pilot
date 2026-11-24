@@ -26,6 +26,7 @@ export default function Dashboard({ darkMode, setDarkMode }) {
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDuration, setNewTaskDuration] = useState(45);
   const [newTaskPriority, setNewTaskPriority] = useState('High');
   const [newTaskCategory, setNewTaskCategory] = useState('Studies');
@@ -105,13 +106,16 @@ export default function Dashboard({ darkMode, setDarkMode }) {
     if (!newTaskName.trim()) return;
     addTask({
       name: newTaskName.trim(),
+      description: newTaskDescription.trim(),
       duration: Number(newTaskDuration),
       priority: newTaskPriority,
       category: newTaskCategory,
       type: 'Flexible',
-      scheduledTime: '16:00'
+      scheduledTime: '16:00',
+      scheduledDate: 'today'
     });
     setNewTaskName('');
+    setNewTaskDescription('');
     setShowQuickAddModal(false);
     showToast('Task added successfully');
   };
@@ -638,8 +642,19 @@ export default function Dashboard({ darkMode, setDarkMode }) {
                   value={newTaskName}
                   onChange={(e) => setNewTaskName(e.target.value)}
                   placeholder="e.g. Political Science Case Law"
-                  className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-on-surface text-sm"
+                  className="w-full bg-surface-container-low rounded-xl px-4 py-2.5 text-on-surface text-sm focus:outline-none"
                   autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Description</label>
+                <input
+                  type="text"
+                  value={newTaskDescription}
+                  onChange={(e) => setNewTaskDescription(e.target.value)}
+                  placeholder="Task notes or description (optional)..."
+                  className="w-full bg-surface-container-low rounded-xl px-4 py-2.5 text-on-surface text-sm focus:outline-none"
                 />
               </div>
 

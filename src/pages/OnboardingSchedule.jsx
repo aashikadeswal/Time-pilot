@@ -10,7 +10,7 @@ export default function OnboardingSchedule({ darkMode, setDarkMode }) {
   const flexHours = Math.floor(flexibleMins / 60);
   const flexRemainder = flexibleMins % 60;
 
-  const [initialTaskName, setInitialTaskName] = useState('Political Science Revision');
+  const [initialTaskName, setInitialTaskName] = useState('');
   const [initialDuration, setInitialDuration] = useState(45);
   const [initialPriority, setInitialPriority] = useState('High');
 

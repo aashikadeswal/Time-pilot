@@ -6,10 +6,7 @@ export default function OnboardingGoals({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const { addGoal } = useTimePilot();
 
-  const [selectedGoals, setSelectedGoals] = useState([
-    'Political Science Revision',
-    'SSC Preparation'
-  ]);
+  const [selectedGoals, setSelectedGoals] = useState([]);
   const [customGoalName, setCustomGoalName] = useState('');
   const [showAddCustom, setShowAddCustom] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState('High');
@@ -41,7 +38,8 @@ export default function OnboardingGoals({ darkMode, setDarkMode }) {
         name,
         category: 'Personal',
         priority: selectedPriority,
-        targetHoursPerWeek: 10
+        targetHoursPerWeek: 10,
+        due: 'Ongoing'
       });
     }
     setCustomGoalName('');
@@ -49,9 +47,18 @@ export default function OnboardingGoals({ darkMode, setDarkMode }) {
   };
 
   const handleContinue = () => {
-    if (selectedGoals.length > 0) {
-      navigate('/onboarding/typical-day');
-    }
+    selectedGoals.forEach(gName => {
+      const preset = presetGoals.find(p => p.name === gName);
+      addGoal({
+        name: gName,
+        category: preset?.category || 'Personal',
+        priority: 'High',
+        targetHoursPerWeek: 10,
+        due: 'Ongoing',
+        icon: preset?.icon || 'flag'
+      });
+    });
+    navigate('/onboarding/typical-day');
   };
 
   return (

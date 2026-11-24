@@ -4,19 +4,22 @@ from typing import Optional, List, Union
 class GoalModel(BaseModel):
     id: str
     name: str
+    description: Optional[str] = ""
     category: str
     priority: str = "High"
     progress: Optional[int] = 0
     due: Optional[str] = "Ongoing"
-    status: Optional[str] = "active"
+    status: Optional[str] = "active"  # "active", "paused", "completed"
     focusLoggedMinutes: Optional[int] = 0
     streakDays: Optional[int] = 0
     targetHoursPerWeek: Optional[Union[float, int]] = 10
     icon: Optional[str] = "flag"
+    user_email: Optional[str] = None
 
 class TaskModel(BaseModel):
     id: str
     name: str
+    description: Optional[str] = ""
     priority: str = "Med"
     duration: int = 30
     category: Optional[str] = "Studies"
@@ -27,6 +30,7 @@ class TaskModel(BaseModel):
     actualMinutesSpent: Optional[int] = 0
     goalId: Optional[str] = None
     notes: Optional[str] = ""
+    user_email: Optional[str] = None
 
 class CommitmentModel(BaseModel):
     id: str

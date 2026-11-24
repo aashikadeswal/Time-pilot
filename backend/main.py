@@ -9,10 +9,12 @@ try:
     from .database import db
     from .models import GoalModel, TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
     from .auth_routes import router as auth_router
+    from .auth import get_current_user, get_current_user_optional
 except (ImportError, ValueError):
     from database import db
     from models import GoalModel, TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
     from auth_routes import router as auth_router
+    from auth import get_current_user, get_current_user_optional
 
 app = FastAPI(title="Time Pilot Backend API")
 
@@ -58,7 +60,7 @@ app.include_router(auth_router)
 
 # ----------------- Seed Mock Data Helpers -----------------
 async def seed_if_empty():
-    # Check settings
+    # Only seed global defaults if completely empty (never seed tasks or goals into user space)
     settings_count = await db.settings.count_documents({})
     if settings_count == 0:
         await db.settings.insert_one({
@@ -66,56 +68,6 @@ async def seed_if_empty():
             "autoSchedule": False,
             "dailyDigest": True
         })
-
-    # Check tasks
-    tasks_count = await db.tasks.count_documents({})
-    if tasks_count == 0:
-        await db.tasks.insert_many([
-            {"id": "1", "name": "Draft thesis methodology section", "priority": "High", "duration": 90, "category": "Thesis", "completed": False},
-            {"id": "2", "name": "Review chapter 4 literature notes", "priority": "Med", "duration": 45, "category": "Thesis", "completed": False},
-            {"id": "3", "name": "Email advisor regarding meeting times", "priority": "Low", "duration": 15, "category": "Admin", "completed": True}
-        ])
-
-    # Check commitments
-    commitments_count = await db.commitments.count_documents({})
-    if commitments_count == 0:
-        await db.commitments.insert_many([
-            {"id": "1", "time": "09:00", "name": "College", "type": "Fixed", "duration": "6h", "color": "bg-surface-variant", "line": "bg-outline", "ring": "", "opacity": ""},
-            {"id": "2", "time": "15:00", "name": "Travel", "type": "Fixed", "duration": "1h", "color": "bg-surface-variant", "line": "bg-outline", "ring": "", "opacity": ""},
-            {"id": "3", "time": "16:00", "name": "Flexible", "type": "Flexible", "duration": "1h", "color": "bg-primary", "line": "bg-primary/50", "ring": "", "opacity": ""},
-            {"id": "4", "time": "17:00", "name": "Study", "type": "Planned", "duration": "1h", "color": "bg-surface", "ring": "ring-4 ring-primary", "line": "bg-primary", "opacity": ""},
-            {"id": "5", "time": "18:00", "name": "Flexible", "type": "Flexible", "duration": "1h 15m", "color": "bg-primary", "line": "bg-primary/50", "ring": "", "opacity": ""},
-            {"id": "6", "time": "20:00", "name": "Dinner & Wind Down", "type": "Rest", "duration": "3h", "color": "bg-secondary-container", "line": "bg-secondary-container", "ring": "", "opacity": ""},
-            {"id": "7", "time": "23:00", "name": "Sleep", "type": "Rest", "duration": "8h", "color": "bg-secondary-container", "line": "bg-secondary-container", "ring": "", "opacity": "opacity-70"}
-        ])
-
-    # Check focus history
-    focus_count = await db.focus_history.count_documents({})
-    if focus_count == 0:
-        await db.focus_history.insert_many([
-            {"id": "1", "category": "Mathematics", "secondsLogged": 2520, "completed": True, "sentiment": "Okay", "timestamp": "Just now"},
-            {"id": "2", "category": "Political Science", "secondsLogged": 1800, "completed": True, "sentiment": "Easy", "timestamp": "2 hrs ago"},
-            {"id": "3", "category": "Reading", "secondsLogged": 1080, "completed": False, "sentiment": "Difficult", "timestamp": "10:00 AM"}
-        ])
-
-    # Check AI Coach Chat Messages
-    chat_count = await db.chat_history.count_documents({})
-    if chat_count == 0:
-        await db.chat_history.insert_one({
-            "id": "1",
-            "sender": "coach",
-            "text": "Hello Sam! I'm your Time Pilot Coach. I can help you analyze your schedule, manage capacity, or jump into a focus session. What's on your mind today?"
-        })
-
-    # Check Goals
-    goals_count = await db.goals.count_documents({})
-    if goals_count == 0:
-        await db.goals.insert_many([
-            {"id": "g-1", "name": "Political Science Revision", "category": "Studies", "priority": "High", "progress": 78, "due": "Nov 15", "status": "active", "focusLoggedMinutes": 7440, "streakDays": 5, "targetHoursPerWeek": 15, "icon": "school"},
-            {"id": "g-2", "name": "SSC Preparation", "category": "Competitive Exams", "priority": "High", "progress": 64, "due": "Dec 01", "status": "active", "focusLoggedMinutes": 2520, "streakDays": 3, "targetHoursPerWeek": 10, "icon": "menu_book"},
-            {"id": "g-3", "name": "Health & Fitness", "category": "Personal", "priority": "Med", "progress": 52, "due": "Ongoing", "status": "active", "focusLoggedMinutes": 1080, "streakDays": 4, "targetHoursPerWeek": 5, "icon": "fitness_center"},
-            {"id": "g-4", "name": "Research Paper Methodology", "category": "Thesis", "priority": "Med", "progress": 40, "due": "Nov 30", "status": "active", "focusLoggedMinutes": 1800, "streakDays": 2, "targetHoursPerWeek": 8, "icon": "article"}
-        ])
 
 @app.get("/")
 @app.get("/health")
@@ -150,35 +102,43 @@ async def update_settings(updated: SettingsModel):
 
 # ----------------- Tasks Endpoints -----------------
 @app.get("/api/tasks", response_model=List[TaskModel])
-async def get_tasks():
-    cursor = db.tasks.find({}, {"_id": 0})
-    tasks = await cursor.to_list(length=100)
+async def get_tasks(current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    cursor = db.tasks.find({"user_email": user_email}, {"_id": 0})
+    tasks = await cursor.to_list(length=200)
     return [TaskModel(**t) for t in tasks]
 
 @app.post("/api/tasks", response_model=TaskModel)
-async def create_task(task: TaskModel):
-    # Check if task already exists to prevent duplicate id conflicts
-    existing = await db.tasks.find_one({"id": task.id})
-    if existing:
-        await db.tasks.update_one({"id": task.id}, {"$set": task.dict()})
-    else:
-        await db.tasks.insert_one(task.dict())
-    return task
+async def create_task(task: TaskModel, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    task_dict = task.model_dump() if hasattr(task, 'model_dump') else task.dict()
+    task_dict["user_email"] = user_email
+    await db.tasks.update_one(
+        {"id": task.id, "user_email": user_email},
+        {"$set": task_dict},
+        upsert=True
+    )
+    return TaskModel(**task_dict)
 
 @app.put("/api/tasks/{task_id}", response_model=TaskModel)
-async def update_task(task_id: str, updated_task: TaskModel):
-    result = await db.tasks.update_one({"id": task_id}, {"$set": updated_task.dict()})
-    if result.matched_count == 0:
-        # If not found, insert
-        await db.tasks.insert_one(updated_task.dict())
-    return updated_task
+async def update_task(task_id: str, updated_task: TaskModel, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    task_dict = updated_task.model_dump() if hasattr(updated_task, 'model_dump') else updated_task.dict()
+    task_dict["user_email"] = user_email
+    await db.tasks.update_one(
+        {"id": task_id, "user_email": user_email},
+        {"$set": task_dict},
+        upsert=True
+    )
+    return TaskModel(**task_dict)
 
 @app.delete("/api/tasks/{task_id}")
-async def delete_task(task_id: str):
-    result = await db.tasks.delete_one({"id": task_id})
+async def delete_task(task_id: str, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    result = await db.tasks.delete_one({"id": task_id, "user_email": user_email})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
-    return {"message": "Task deleted successfully"}
+    return {"message": "Task deleted successfully", "success": True}
 
 
 # ----------------- Commitments Endpoints -----------------
@@ -259,28 +219,41 @@ async def send_coach_message(user_msg: ChatMessageModel):
 
 # ----------------- Goals Endpoints -----------------
 @app.get("/api/goals", response_model=List[GoalModel])
-async def get_goals():
-    cursor = db.goals.find({}, {"_id": 0})
-    goals = await cursor.to_list(length=100)
+async def get_goals(current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    cursor = db.goals.find({"user_email": user_email}, {"_id": 0})
+    goals = await cursor.to_list(length=200)
     return [GoalModel(**g) for g in goals]
 
 @app.post("/api/goals", response_model=GoalModel)
-async def create_goal(goal: GoalModel):
-    await db.goals.update_one({"id": goal.id}, {"$set": goal.model_dump() if hasattr(goal, 'model_dump') else goal.dict()}, upsert=True)
-    return goal
+async def create_goal(goal: GoalModel, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    goal_dict = goal.model_dump() if hasattr(goal, 'model_dump') else goal.dict()
+    goal_dict["user_email"] = user_email
+    await db.goals.update_one(
+        {"id": goal.id, "user_email": user_email},
+        {"$set": goal_dict},
+        upsert=True
+    )
+    return GoalModel(**goal_dict)
 
 @app.put("/api/goals/{goal_id}", response_model=GoalModel)
-async def update_goal(goal_id: str, updated_goal: GoalModel):
-    payload = updated_goal.model_dump() if hasattr(updated_goal, 'model_dump') else updated_goal.dict()
-    result = await db.goals.update_one({"id": goal_id}, {"$set": payload})
-    if result.matched_count == 0:
-        await db.goals.insert_one(payload)
-    return updated_goal
+async def update_goal(goal_id: str, updated_goal: GoalModel, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    goal_dict = updated_goal.model_dump() if hasattr(updated_goal, 'model_dump') else updated_goal.dict()
+    goal_dict["user_email"] = user_email
+    await db.goals.update_one(
+        {"id": goal_id, "user_email": user_email},
+        {"$set": goal_dict},
+        upsert=True
+    )
+    return GoalModel(**goal_dict)
 
 @app.delete("/api/goals/{goal_id}")
-async def delete_goal(goal_id: str):
-    result = await db.goals.delete_one({"id": goal_id})
+async def delete_goal(goal_id: str, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"].lower()
+    result = await db.goals.delete_one({"id": goal_id, "user_email": user_email})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
-    return {"message": "Goal deleted successfully"}
+    return {"message": "Goal deleted successfully", "success": True}
 

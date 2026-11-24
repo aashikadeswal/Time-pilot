@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 
 const TimePilotContext = createContext(null);
 
@@ -20,232 +21,9 @@ const INITIAL_USER = {
   field: 'Political Science & Law'
 };
 
-const INITIAL_GOALS = [
-  {
-    id: 'g-1',
-    name: 'Political Science Revision',
-    category: 'Studies',
-    priority: 'High',
-    progress: 78,
-    due: 'Nov 15',
-    status: 'active',
-    focusLoggedMinutes: 7440, // 124h
-    streakDays: 5,
-    targetHoursPerWeek: 15,
-    icon: 'school'
-  },
-  {
-    id: 'g-2',
-    name: 'SSC Preparation',
-    category: 'Competitive Exams',
-    priority: 'High',
-    progress: 64,
-    due: 'Dec 01',
-    status: 'active',
-    focusLoggedMinutes: 2520, // 42h
-    streakDays: 3,
-    targetHoursPerWeek: 10,
-    icon: 'menu_book'
-  },
-  {
-    id: 'g-3',
-    name: 'Health & Fitness',
-    category: 'Personal',
-    priority: 'Med',
-    progress: 52,
-    due: 'Ongoing',
-    status: 'active',
-    focusLoggedMinutes: 1080, // 18h
-    streakDays: 4,
-    targetHoursPerWeek: 5,
-    icon: 'fitness_center'
-  },
-  {
-    id: 'g-4',
-    name: 'Research Paper Methodology',
-    category: 'Thesis',
-    priority: 'Med',
-    progress: 40,
-    due: 'Nov 30',
-    status: 'active',
-    focusLoggedMinutes: 1800, // 30h
-    streakDays: 2,
-    targetHoursPerWeek: 8,
-    icon: 'article'
-  }
-];
+const INITIAL_GOALS = [];
 
-const INITIAL_COMMITMENTS = [
-  {
-    id: 'c-1',
-    time: '09:00',
-    endTime: '15:00',
-    name: 'College Lectures',
-    type: 'Fixed',
-    duration: '6h',
-    durationMins: 360,
-    location: 'Campus Block B',
-    color: 'bg-surface-variant',
-    line: 'bg-outline',
-    icon: 'school'
-  },
-  {
-    id: 'c-2',
-    time: '15:00',
-    endTime: '16:00',
-    name: 'Travel & Commute',
-    type: 'Fixed',
-    duration: '1h',
-    durationMins: 60,
-    location: 'Metro Route',
-    color: 'bg-surface-variant',
-    line: 'bg-outline',
-    icon: 'directions_transit'
-  },
-  {
-    id: 'c-3',
-    time: '16:00',
-    endTime: '17:00',
-    name: 'Flexible Study Block',
-    type: 'Flexible',
-    duration: '1h',
-    durationMins: 60,
-    location: 'Home Desk',
-    color: 'bg-primary',
-    line: 'bg-primary/50',
-    icon: 'schedule'
-  },
-  {
-    id: 'c-4',
-    time: '17:00',
-    endTime: '18:00',
-    name: 'Political Science Revision',
-    type: 'Planned',
-    duration: '1h',
-    durationMins: 60,
-    location: 'Library',
-    color: 'bg-surface',
-    ring: 'ring-4 ring-primary',
-    line: 'bg-primary',
-    icon: 'assignment'
-  },
-  {
-    id: 'c-5',
-    time: '18:00',
-    endTime: '19:15',
-    name: 'Flexible Evening Block',
-    type: 'Flexible',
-    duration: '1h 15m',
-    durationMins: 75,
-    location: 'Home Desk',
-    color: 'bg-primary',
-    line: 'bg-primary/50',
-    icon: 'schedule'
-  },
-  {
-    id: 'c-6',
-    time: '19:15',
-    endTime: '20:15',
-    name: 'Gym & Fitness',
-    type: 'Personal',
-    duration: '1h',
-    durationMins: 60,
-    location: 'Fitness Center',
-    color: 'bg-tertiary-container',
-    line: 'bg-tertiary',
-    icon: 'fitness_center'
-  },
-  {
-    id: 'c-7',
-    time: '20:30',
-    endTime: '22:00',
-    name: 'Dinner & Wind Down',
-    type: 'Rest',
-    duration: '1h 30m',
-    durationMins: 90,
-    location: 'Home',
-    color: 'bg-secondary-container',
-    line: 'bg-secondary-container',
-    icon: 'restaurant'
-  },
-  {
-    id: 'c-8',
-    time: '23:00',
-    endTime: '07:00',
-    name: 'Sleep',
-    type: 'Rest',
-    duration: '8h',
-    durationMins: 480,
-    location: 'Bedroom',
-    color: 'bg-secondary-container',
-    line: 'bg-secondary-container',
-    opacity: 'opacity-70',
-    icon: 'bedtime'
-  }
-];
-
-const INITIAL_TASKS = [
-  {
-    id: 't-1',
-    name: 'Political Science Revision',
-    priority: 'High',
-    duration: 45,
-    category: 'Studies',
-    type: 'Flexible',
-    goalId: 'g-1',
-    scheduledTime: '16:00',
-    scheduledDate: 'today',
-    completed: false,
-    missed: false,
-    rescheduled: false,
-    reasonWhy: 'High priority, aligns with your Political Science goal, and fits before dinner.'
-  },
-  {
-    id: 't-2',
-    name: 'SSC Quantitative Aptitude Practice',
-    priority: 'High',
-    duration: 60,
-    category: 'Competitive Exams',
-    type: 'Flexible',
-    goalId: 'g-2',
-    scheduledTime: '17:00',
-    scheduledDate: 'today',
-    completed: false,
-    missed: false,
-    rescheduled: false,
-    reasonWhy: 'High priority exam preparation session.'
-  },
-  {
-    id: 't-3',
-    name: 'Review Chapter 4 literature notes',
-    priority: 'Med',
-    duration: 30,
-    category: 'Thesis',
-    type: 'Flexible',
-    goalId: 'g-4',
-    scheduledTime: '18:15',
-    scheduledDate: 'today',
-    completed: false,
-    missed: false,
-    rescheduled: false,
-    reasonWhy: 'Med priority thesis check.'
-  },
-  {
-    id: 't-4',
-    name: 'Email Professor regarding research draft',
-    priority: 'Low',
-    duration: 15,
-    category: 'Admin',
-    type: 'Personal',
-    goalId: null,
-    scheduledTime: '12:30',
-    scheduledDate: 'today',
-    completed: true,
-    missed: false,
-    rescheduled: false,
-    reasonWhy: 'Quick administrative task.'
-  }
-];
+const INITIAL_TASKS = [];
 
 const INITIAL_FOCUS_HISTORY = [
   {
@@ -309,15 +87,41 @@ const INITIAL_SETTINGS = {
 };
 
 export function TimePilotProvider({ children }) {
-  // Load from localStorage or defaults
+  const auth = useAuth() || {};
+  const { user: authUser, token, authFetch } = auth;
+
+  // Active user identity: prefer authenticated user, fallback to stored/initial
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.USER);
     return saved ? JSON.parse(saved) : INITIAL_USER;
   });
 
+  // Sync authUser into user state whenever authUser changes
+  useEffect(() => {
+    if (authUser) {
+      setUser(prev => ({
+        ...prev,
+        ...authUser,
+        name: authUser.name || prev.name || 'User',
+        email: authUser.email || prev.email,
+        field: authUser.field_of_study || prev.field || 'Student',
+        institution: authUser.institution || prev.institution || '',
+      }));
+    }
+  }, [authUser]);
+
+  // User-scoped storage keys
+  const userKey = authUser?.email ? authUser.email.toLowerCase() : null;
+  const userTasksKey = userKey ? `timepilot_tasks_${userKey}` : STORAGE_KEYS.TASKS;
+  const userGoalsKey = userKey ? `timepilot_goals_${userKey}` : STORAGE_KEYS.GOALS;
+
   const [goals, setGoals] = useState(() => {
+    if (userKey) {
+      const saved = localStorage.getItem(userGoalsKey);
+      return saved ? JSON.parse(saved) : [];
+    }
     const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
-    return saved ? JSON.parse(saved) : INITIAL_GOALS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [commitments, setCommitments] = useState(() => {
@@ -326,8 +130,12 @@ export function TimePilotProvider({ children }) {
   });
 
   const [tasks, setTasks] = useState(() => {
+    if (userKey) {
+      const saved = localStorage.getItem(userTasksKey);
+      return saved ? JSON.parse(saved) : [];
+    }
     const saved = localStorage.getItem(STORAGE_KEYS.TASKS);
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [focusHistory, setFocusHistory] = useState(() => {
@@ -354,16 +162,24 @@ export function TimePilotProvider({ children }) {
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
-  }, [goals]);
+    if (userKey) {
+      localStorage.setItem(userGoalsKey, JSON.stringify(goals));
+    } else {
+      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
+    }
+  }, [goals, userKey, userGoalsKey]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.COMMITMENTS, JSON.stringify(commitments));
   }, [commitments]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
-  }, [tasks]);
+    if (userKey) {
+      localStorage.setItem(userTasksKey, JSON.stringify(tasks));
+    } else {
+      localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+    }
+  }, [tasks, userKey, userTasksKey]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.FOCUS_HISTORY, JSON.stringify(focusHistory));
@@ -376,6 +192,72 @@ export function TimePilotProvider({ children }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   }, [settings]);
+
+  // Load user data from backend API whenever authenticated user or token changes
+  useEffect(() => {
+    if (!token || !userKey || !authFetch) {
+      if (!authUser) {
+        // Clear tasks and goals on logout
+        setGoals([]);
+        setTasks([]);
+      }
+      return;
+    }
+
+    let isMounted = true;
+
+    // First load from user-scoped local cache for instant UI
+    const cachedTasks = localStorage.getItem(userTasksKey);
+    if (cachedTasks) {
+      try {
+        setTasks(JSON.parse(cachedTasks));
+      } catch {
+        setTasks([]);
+      }
+    } else {
+      setTasks([]);
+    }
+
+    const cachedGoals = localStorage.getItem(userGoalsKey);
+    if (cachedGoals) {
+      try {
+        setGoals(JSON.parse(cachedGoals));
+      } catch {
+        setGoals([]);
+      }
+    } else {
+      setGoals([]);
+    }
+
+    // Then fetch user's saved data from the database
+    const fetchUserData = async () => {
+      try {
+        const [remoteGoals, remoteTasks] = await Promise.all([
+          authFetch('/api/goals').catch(() => null),
+          authFetch('/api/tasks').catch(() => null),
+        ]);
+
+        if (!isMounted) return;
+
+        if (Array.isArray(remoteGoals)) {
+          setGoals(remoteGoals);
+          localStorage.setItem(userGoalsKey, JSON.stringify(remoteGoals));
+        }
+        if (Array.isArray(remoteTasks)) {
+          setTasks(remoteTasks);
+          localStorage.setItem(userTasksKey, JSON.stringify(remoteTasks));
+        }
+      } catch (err) {
+        console.warn('Backend unavailable, using cached user data:', err);
+      }
+    };
+
+    fetchUserData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token, userKey]);
 
   // --- Flexible Available Time Calculation ---
   // Calculates flexible study time available in the day (minutes)
@@ -447,50 +329,122 @@ export function TimePilotProvider({ children }) {
   };
 
   // Task Actions
-  const addTask = (taskData) => {
+  const addTask = async (taskData) => {
     const newTask = {
       id: String(Date.now()),
-      name: taskData.name || 'New Focus Task',
+      name: taskData.name || taskData.title || 'New Task',
+      description: taskData.description || '',
       priority: taskData.priority || 'Med',
-      duration: Number(taskData.duration) || 45,
+      duration: Number(taskData.duration) || 30,
       category: taskData.category || 'Studies',
       type: taskData.type || 'Flexible',
       goalId: taskData.goalId || null,
       scheduledTime: taskData.scheduledTime || '16:00',
       scheduledDate: taskData.scheduledDate || 'today',
-      completed: false,
+      completed: Boolean(taskData.completed) || false,
       missed: false,
       rescheduled: false,
-      reasonWhy: taskData.reasonWhy || 'Planned task for today.'
+      reasonWhy: taskData.reasonWhy || '',
+      user_email: authUser?.email || null,
     };
     setTasks(prev => [newTask, ...prev]);
+    if (token && authFetch) {
+      try {
+        await authFetch('/api/tasks', {
+          method: 'POST',
+          body: JSON.stringify(newTask),
+        });
+      } catch (err) {
+        console.warn('FastAPI task create sync failed, cached locally:', err);
+      }
+    }
     return newTask;
   };
 
-  const updateTask = (taskId, updates) => {
-    setTasks(prev => prev.map(t => (t.id === taskId ? { ...t, ...updates } : t)));
-  };
-
-  const deleteTask = (taskId) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-  };
-
-  const toggleTaskCompleted = (taskId) => {
+  const updateTask = async (taskId, updates) => {
+    let updatedTask = null;
     setTasks(prev =>
       prev.map(t => {
         if (t.id === taskId) {
-          const nextCompleted = !t.completed;
-          return { ...t, completed: nextCompleted, missed: false };
+          updatedTask = { ...t, ...updates };
+          return updatedTask;
         }
         return t;
       })
     );
+    if (token && authFetch && updatedTask) {
+      try {
+        await authFetch(`/api/tasks/${taskId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedTask),
+        });
+      } catch (err) {
+        console.warn('FastAPI task update sync failed, cached locally:', err);
+      }
+    }
+    return updatedTask;
   };
 
-  const moveTaskToTomorrow = (taskId) => {
+  const deleteTask = async (taskId) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    if (token && authFetch) {
+      try {
+        await authFetch(`/api/tasks/${taskId}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.warn('FastAPI task delete sync failed, removed locally:', err);
+      }
+    }
+  };
+
+  const toggleTaskCompleted = async (taskId) => {
+    let updatedTask = null;
     setTasks(prev =>
-      prev.map(t => (t.id === taskId ? { ...t, scheduledDate: 'tomorrow', rescheduled: true, missed: false } : t))
+      prev.map(t => {
+        if (t.id === taskId) {
+          const nextCompleted = !t.completed;
+          updatedTask = { ...t, completed: nextCompleted, missed: false };
+          return updatedTask;
+        }
+        return t;
+      })
     );
+    if (token && authFetch && updatedTask) {
+      try {
+        await authFetch(`/api/tasks/${taskId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedTask),
+        });
+      } catch (err) {
+        console.warn('FastAPI task complete sync failed, cached locally:', err);
+      }
+    }
+    return updatedTask;
+  };
+
+  const moveTaskToTomorrow = async (taskId) => {
+    let updatedTask = null;
+    setTasks(prev =>
+      prev.map(t => {
+        if (t.id === taskId) {
+          updatedTask = { ...t, scheduledDate: 'tomorrow', rescheduled: true, missed: false };
+          return updatedTask;
+        }
+        return t;
+      })
+    );
+    if (token && authFetch && updatedTask) {
+      try {
+        await authFetch(`/api/tasks/${taskId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedTask),
+        });
+      } catch (err) {
+        console.warn('FastAPI task move sync failed, cached locally:', err);
+      }
+    }
+    return updatedTask;
   };
 
   const shortenTask = (taskId, newDuration) => {
@@ -529,7 +483,6 @@ export function TimePilotProvider({ children }) {
       const completed = prev.filter(t => t.completed || t.scheduledDate === 'tomorrow');
 
       if (strategy === 'move_low_priority') {
-        // Move low priority to tomorrow
         const updated = uncompleted.map(t => {
           if (t.priority === 'Low') {
             return { ...t, scheduledDate: 'tomorrow', rescheduled: true, missed: false };
@@ -540,7 +493,6 @@ export function TimePilotProvider({ children }) {
       }
 
       if (strategy === 'shorten_sessions') {
-        // Shorten sessions > 45m by 15-30m
         const updated = uncompleted.map(t => {
           if (t.duration > 45) {
             return { ...t, duration: Math.max(30, t.duration - 20), rescheduled: true, missed: false };
@@ -550,7 +502,6 @@ export function TimePilotProvider({ children }) {
         return [...completed, ...updated];
       }
 
-      // Default smart_balance: Keep highest priority, shorten remaining, move low priority
       const highAndMed = uncompleted.filter(t => t.priority === 'High' || t.priority === 'Med');
       const low = uncompleted.filter(t => t.priority === 'Low');
 
@@ -597,36 +548,125 @@ export function TimePilotProvider({ children }) {
   };
 
   // Goal Actions
-  const addGoal = (gData) => {
+  const addGoal = async (gData) => {
     const newGoal = {
       id: String(Date.now()),
-      name: gData.name,
-      category: gData.category || 'General',
+      name: gData.name || gData.title || 'New Goal',
+      description: gData.description || '',
+      category: gData.category || 'Studies',
       priority: gData.priority || 'High',
-      progress: 0,
-      due: gData.due || 'Next Month',
-      status: 'active',
+      progress: Number(gData.progress) || 0,
+      due: gData.due || gData.targetDate || 'Ongoing',
+      status: gData.status || 'active',
       focusLoggedMinutes: 0,
       streakDays: 0,
       targetHoursPerWeek: Number(gData.targetHoursPerWeek) || 10,
-      icon: gData.icon || 'flag'
+      icon: gData.icon || 'flag',
+      user_email: authUser?.email || null,
     };
     setGoals(prev => [newGoal, ...prev]);
+    if (token && authFetch) {
+      try {
+        await authFetch('/api/goals', {
+          method: 'POST',
+          body: JSON.stringify(newGoal),
+        });
+      } catch (err) {
+        console.warn('FastAPI goal create sync failed, cached locally:', err);
+      }
+    }
     return newGoal;
   };
 
-  const updateGoal = (gId, updates) => {
-    setGoals(prev => prev.map(g => (g.id === gId ? { ...g, ...updates } : g)));
-  };
-
-  const toggleGoalPause = (gId) => {
+  const updateGoal = async (gId, updates) => {
+    let updatedGoal = null;
     setGoals(prev =>
-      prev.map(g => (g.id === gId ? { ...g, status: g.status === 'active' ? 'paused' : 'active' } : g))
+      prev.map(g => {
+        if (g.id === gId) {
+          updatedGoal = { ...g, ...updates };
+          return updatedGoal;
+        }
+        return g;
+      })
     );
+    if (token && authFetch && updatedGoal) {
+      try {
+        await authFetch(`/api/goals/${gId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedGoal),
+        });
+      } catch (err) {
+        console.warn('FastAPI goal update sync failed, cached locally:', err);
+      }
+    }
+    return updatedGoal;
   };
 
-  const deleteGoal = (gId) => {
+  const toggleGoalPause = async (gId) => {
+    let updatedGoal = null;
+    setGoals(prev =>
+      prev.map(g => {
+        if (g.id === gId) {
+          const nextStatus = g.status === 'paused' ? 'active' : 'paused';
+          updatedGoal = { ...g, status: nextStatus };
+          return updatedGoal;
+        }
+        return g;
+      })
+    );
+    if (token && authFetch && updatedGoal) {
+      try {
+        await authFetch(`/api/goals/${gId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedGoal),
+        });
+      } catch (err) {
+        console.warn('FastAPI goal pause sync failed, cached locally:', err);
+      }
+    }
+    return updatedGoal;
+  };
+
+  const toggleGoalCompleted = async (gId) => {
+    let updatedGoal = null;
+    setGoals(prev =>
+      prev.map(g => {
+        if (g.id === gId) {
+          const isNowCompleted = g.status !== 'completed';
+          updatedGoal = {
+            ...g,
+            status: isNowCompleted ? 'completed' : 'active',
+            progress: isNowCompleted ? 100 : (g.progress === 100 ? 50 : g.progress),
+          };
+          return updatedGoal;
+        }
+        return g;
+      })
+    );
+    if (token && authFetch && updatedGoal) {
+      try {
+        await authFetch(`/api/goals/${gId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updatedGoal),
+        });
+      } catch (err) {
+        console.warn('FastAPI goal complete sync failed, cached locally:', err);
+      }
+    }
+    return updatedGoal;
+  };
+
+  const deleteGoal = async (gId) => {
     setGoals(prev => prev.filter(g => g.id !== gId));
+    if (token && authFetch) {
+      try {
+        await authFetch(`/api/goals/${gId}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.warn('FastAPI goal delete sync failed, removed locally:', err);
+      }
+    }
   };
 
   // Focus Log Action
@@ -742,6 +782,7 @@ export function TimePilotProvider({ children }) {
     addGoal,
     updateGoal,
     toggleGoalPause,
+    toggleGoalCompleted,
     deleteGoal,
     logFocusSession,
     sendChatMessage,

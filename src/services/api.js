@@ -2,39 +2,12 @@
 // Communicates with Python FastAPI endpoints.
 // Includes transparent offline fallbacks in case the backend server is down during local development.
 
-const defaultTasks = [
-  { id: '1', name: 'Draft thesis methodology section', priority: 'High', duration: 90, category: 'Thesis', completed: false },
-  { id: '2', name: 'Review chapter 4 literature notes', priority: 'Med', duration: 45, category: 'Thesis', completed: false },
-  { id: '3', name: 'Email advisor regarding meeting times', priority: 'Low', duration: 15, category: 'Admin', completed: true }
-];
+const defaultTasks = [];
+const defaultGoals = [];
 
-const defaultCommitments = [
-  { id: '1', time: '09:00', name: 'College', type: 'Fixed', duration: '6h', color: 'bg-surface-variant', line: 'bg-outline', ring: '', opacity: '' },
-  { id: '2', time: '15:00', name: 'Travel', type: 'Fixed', duration: '1h', color: 'bg-surface-variant', line: 'bg-outline', ring: '', opacity: '' },
-  { id: '3', time: '16:00', name: 'Flexible', type: 'Flexible', duration: '1h', color: 'bg-primary', line: 'bg-primary/50', ring: '', opacity: '' },
-  { id: '4', time: '17:00', name: 'Study', type: 'Planned', duration: '1h', color: 'bg-surface', ring: 'ring-4 ring-primary', line: 'bg-primary', opacity: '' },
-  { id: '5', time: '18:00', name: 'Flexible', type: 'Flexible', duration: '1h 15m', color: 'bg-primary', line: 'bg-primary/50', ring: '', opacity: '' },
-  { id: '6', time: '20:00', name: 'Dinner & Wind Down', type: 'Rest', duration: '3h', color: 'bg-secondary-container', line: 'bg-secondary-container', ring: '', opacity: '' },
-  { id: '7', time: '23:00', name: 'Sleep', type: 'Rest', duration: '8h', color: 'bg-secondary-container', line: 'bg-secondary-container', ring: '', opacity: 'opacity-70' }
-];
-
-const defaultGoals = [
-  { id: 'g-1', name: 'Political Science Revision', category: 'Studies', priority: 'High', progress: 78, due: 'Nov 15', status: 'active', focusLoggedMinutes: 7440, streakDays: 5, targetHoursPerWeek: 15, icon: 'school' },
-  { id: 'g-2', name: 'SSC Preparation', category: 'Competitive Exams', priority: 'High', progress: 64, due: 'Dec 01', status: 'active', focusLoggedMinutes: 2520, streakDays: 3, targetHoursPerWeek: 10, icon: 'menu_book' },
-  { id: 'g-3', name: 'Health & Fitness', category: 'Personal', priority: 'Med', progress: 52, due: 'Ongoing', status: 'active', focusLoggedMinutes: 1080, streakDays: 4, targetHoursPerWeek: 5, icon: 'fitness_center' },
-  { id: 'g-4', name: 'Research Paper Methodology', category: 'Thesis', priority: 'Med', progress: 40, due: 'Nov 30', status: 'active', focusLoggedMinutes: 1800, streakDays: 2, targetHoursPerWeek: 8, icon: 'article' }
-];
-
-const defaultFocusHistory = [
-  { id: '1', category: 'Mathematics', secondsLogged: 2520, completed: true, sentiment: 'Okay', timestamp: 'Just now' },
-  { id: '2', category: 'Political Science', secondsLogged: 1800, completed: true, sentiment: 'Easy', timestamp: '2 hrs ago' },
-  { id: '3', category: 'Reading', secondsLogged: 1080, completed: false, sentiment: 'Difficult', timestamp: '10:00 AM' }
-];
-
-const defaultChatHistory = [
-  { id: '1', sender: 'coach', text: "Hello Sam! I'm your Time Pilot Coach. I can help you analyze your schedule, manage capacity, or jump into a focus session. What's on your mind today?" }
-];
-
+const defaultCommitments = [];
+const defaultFocusHistory = [];
+const defaultChatHistory = [];
 const defaultSettings = {
   notifications: true,
   autoSchedule: false,
@@ -43,15 +16,24 @@ const defaultSettings = {
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('timepilot_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export const api = {
   // --- Tasks API ---
   async fetchTasks() {
     try {
-      const res = await fetch(`${API_BASE}/api/tasks`);
+      const res = await fetch(`${API_BASE}/api/tasks`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch {
-      console.warn('FastAPI backend tasks endpoint offline, using local mock tasks.');
+      console.warn('FastAPI backend tasks endpoint offline, using local cached tasks.');
       return defaultTasks;
     }
   },
@@ -60,7 +42,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/api/tasks`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(task)
       });
       if (!res.ok) throw new Error('API Error');
@@ -75,7 +57,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/api/tasks/${task_id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(updatedTask)
       });
       if (!res.ok) throw new Error('API Error');
@@ -88,11 +70,70 @@ export const api = {
 
   async deleteTask(taskId) {
     try {
-      const res = await fetch(`${API_BASE}/api/tasks/${taskId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch {
       console.warn('FastAPI backend tasks offline, task deleted locally.');
+      return { success: true };
+    }
+  },
+
+  // --- Goals API ---
+  async fetchGoals() {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals endpoint offline, using local cached goals.');
+      return defaultGoals;
+    }
+  },
+
+  async saveGoal(goal) {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(goal)
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals offline, goal saved locally.');
+      return goal;
+    }
+  },
+
+  async updateGoal(goalId, updatedGoal) {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals/${goalId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updatedGoal)
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals offline, goal updated locally.');
+      return updatedGoal;
+    }
+  },
+
+  async deleteGoal(goalId) {
+    try {
+      const res = await fetch(`${API_BASE}/api/goals/${goalId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch {
+      console.warn('FastAPI backend goals offline, goal deleted locally.');
       return { success: true };
     }
   },
