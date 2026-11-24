@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { TimePilotProvider } from './context/TimePilotContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Import Pages
 import LandingPage from './pages/LandingPage';
 import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
+import ForgotPassword from './pages/ForgotPassword';
 import OnboardingGoals from './pages/OnboardingGoals';
 import OnboardingTypicalDay from './pages/OnboardingTypicalDay';
 import OnboardingSchedule from './pages/OnboardingSchedule';
@@ -37,32 +41,80 @@ export default function App() {
   }, [darkMode]);
 
   return (
-    <TimePilotProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Landing and Auth */}
-          <Route path="/" element={<LandingPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/signin" element={<SignIn darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          
-          {/* Onboarding 3-Step Flow */}
-          <Route path="/onboarding/goals" element={<OnboardingGoals darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/onboarding/typical-day" element={<OnboardingTypicalDay darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/onboarding/schedule" element={<OnboardingSchedule darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          
-          {/* Authenticated Application Views */}
-          <Route path="/dashboard" element={<Dashboard darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/planning" element={<DailyPlanning darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/timeline" element={<Timeline darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/focus" element={<FocusCenter darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/focus/summary" element={<FocusSummary darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/ai-coach" element={<AICoach darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/review" element={<WeeklyReview darkMode={darkMode} setDarkMode={setDarkMode} />} />
-          <Route path="/settings" element={<Settings darkMode={darkMode} setDarkMode={setDarkMode} />} />
+    <AuthProvider>
+      <TimePilotProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes — Landing and Auth */}
+            <Route path="/" element={<LandingPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="/signin" element={<SignIn darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="/signup" element={<SignUp darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="/forgot-password" element={<ForgotPassword darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            
+            {/* Onboarding 3-Step Flow (requires auth) */}
+            <Route path="/onboarding/goals" element={
+              <ProtectedRoute>
+                <OnboardingGoals darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/onboarding/typical-day" element={
+              <ProtectedRoute>
+                <OnboardingTypicalDay darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/onboarding/schedule" element={
+              <ProtectedRoute>
+                <OnboardingSchedule darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            
+            {/* Authenticated Application Views */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/planning" element={
+              <ProtectedRoute>
+                <DailyPlanning darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/timeline" element={
+              <ProtectedRoute>
+                <Timeline darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/focus" element={
+              <ProtectedRoute>
+                <FocusCenter darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/focus/summary" element={
+              <ProtectedRoute>
+                <FocusSummary darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-coach" element={
+              <ProtectedRoute>
+                <AICoach darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/review" element={
+              <ProtectedRoute>
+                <WeeklyReview darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings darkMode={darkMode} setDarkMode={setDarkMode} />
+              </ProtectedRoute>
+            } />
 
-          {/* Catch-all Redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </TimePilotProvider>
+            {/* Catch-all Redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </TimePilotProvider>
+    </AuthProvider>
   );
 }

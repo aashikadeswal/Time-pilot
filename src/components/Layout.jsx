@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTimePilot } from '../context/TimePilotContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout({ children, title, darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useTimePilot();
+  const { logout, user: authUser } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const displayName = authUser?.name || user?.name || 'User';
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
@@ -104,18 +109,55 @@ export default function Layout({ children, title, darkMode, setDarkMode }) {
               </span>
             </button>
             
-            {/* Profile Avatar */}
-            <button
-              onClick={() => navigate('/settings')}
-              className="relative group"
-              title={`${user.name} - Settings`}
-            >
-              <img 
-                alt="Profile" 
-                className="w-8 h-8 rounded-xl object-cover cursor-pointer ring-2 ring-transparent group-hover:ring-primary/30 transition-all active:scale-95 border border-outline-variant/20" 
-                src={user.avatar}
-              />
-            </button>
+            {/* Profile Avatar with Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="relative group"
+                title={`${displayName} - Menu`}
+              >
+                {user?.avatar ? (
+                  <img 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-xl object-cover cursor-pointer ring-2 ring-transparent group-hover:ring-primary/30 transition-all active:scale-95 border border-outline-variant/20" 
+                    src={user.avatar}
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-xl bg-primary-container flex items-center justify-center cursor-pointer ring-2 ring-transparent group-hover:ring-primary/30 transition-all active:scale-95 border border-outline-variant/20">
+                    <span className="text-on-primary-container font-bold text-xs">{displayName.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {showProfileMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)}></div>
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-outline-variant/20">
+                      <p className="text-label-md text-on-surface font-bold truncate">{displayName}</p>
+                      <p className="text-label-sm text-on-surface-variant truncate">{authUser?.email || user?.email || ''}</p>
+                    </div>
+                    <div className="py-1">
+                      <button
+                        onClick={() => { setShowProfileMenu(false); navigate('/settings'); }}
+                        className="w-full px-4 py-2.5 text-left text-label-md text-on-surface hover:bg-surface-container flex items-center gap-3 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px] text-on-surface-variant">settings</span>
+                        Settings & Profile
+                      </button>
+                      <button
+                        onClick={() => { setShowProfileMenu(false); logout(); navigate('/'); }}
+                        className="w-full px-4 py-2.5 text-left text-label-md text-error hover:bg-error-container/10 flex items-center gap-3 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">logout</span>
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>

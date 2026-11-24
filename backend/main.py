@@ -6,9 +6,11 @@ import time
 try:
     from .database import db
     from .models import GoalModel, TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
+    from .auth_routes import router as auth_router
 except (ImportError, ValueError):
     from database import db
     from models import GoalModel, TaskModel, CommitmentModel, FocusSessionModel, ChatMessageModel, SettingsModel
+    from auth_routes import router as auth_router
 
 app = FastAPI(title="Time Pilot Backend API")
 
@@ -20,6 +22,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register authentication routes
+app.include_router(auth_router)
 
 # ----------------- Seed Mock Data Helpers -----------------
 async def seed_if_empty():

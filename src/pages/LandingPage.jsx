@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function LandingPage({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleSeeHowItWorks = (e) => {
     e.preventDefault();
@@ -44,12 +46,21 @@ export default function LandingPage({ darkMode, setDarkMode }) {
               <span className="material-symbols-outlined text-[18px]">timer</span>
               Focus Timer
             </button>
-            <button 
-              onClick={() => navigate('/signin')}
-              className="text-primary font-semibold hover:underline text-label-md"
-            >
-              Sign In
-            </button>
+            {isAuthenticated ? (
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className="text-primary font-semibold hover:underline text-label-md"
+              >
+                Dashboard
+              </button>
+            ) : (
+              <button 
+                onClick={() => navigate('/signin')}
+                className="text-primary font-semibold hover:underline text-label-md"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -88,10 +99,10 @@ export default function LandingPage({ darkMode, setDarkMode }) {
               {/* Primary and Secondary CTAs */}
               <div className="flex flex-col sm:flex-row gap-stack-sm w-full sm:w-auto justify-center items-center">
                 <button 
-                  onClick={() => navigate('/onboarding/goals')}
+                  onClick={() => navigate(isAuthenticated ? '/onboarding/goals' : '/signup')}
                   className="bg-primary text-on-primary px-8 py-4 rounded-xl text-label-md font-bold hover:bg-surface-tint transition-all active:scale-95 shadow-md shadow-primary/20 w-full sm:w-auto flex items-center justify-center gap-2"
                 >
-                  Create My Schedule
+                  {isAuthenticated ? 'Create My Schedule' : 'Get Started Free'}
                   <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
                 <button 
