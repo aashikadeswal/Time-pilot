@@ -1,3 +1,0 @@
-# Cloudflare Pages / Netlify redirect rules
-# Ensure API calls are not rewritten by client SPA routing
-/*    /index.html   200
