@@ -48,24 +48,50 @@ export function AuthProvider({ children }) {
   const authFetch = useCallback(async (endpoint, options = {}) => {
     const headers = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...(options.headers || {}),
     };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
-    
-    const data = await res.json();
-    
-    if (!res.ok) {
-      throw new Error(data.detail || data.message || 'Request failed');
+    let res;
+    try {
+      res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
+    } catch (networkErr) {
+      throw new Error(`Network error: Unable to reach server (${networkErr.message || 'connection failed'}). Check your backend connection or VITE_API_URL.`);
     }
     
-    return data;
+    // Safely parse the response text first so empty/HTML responses (204, 404, 405, 500) don't crash JSON.parse()
+    const text = await res.text();
+    let data = null;
+    
+    if (text && text.trim().length > 0) {
+      try {
+        data = JSON.parse(text);
+      } catch (jsonErr) {
+        // Response was not valid JSON (e.g., HTML 404/502 page from proxy/CDN or empty response)
+        const preview = text.length > 120 ? text.slice(0, 120) + '...' : text;
+        throw new Error(
+          `Server returned HTTP ${res.status} ${res.statusText || ''} with non-JSON body: ${preview}`
+        );
+      }
+    }
+    
+    if (!res.ok) {
+      const errMsg =
+        data?.detail ||
+        data?.message ||
+        (typeof data === 'string' ? data : null) ||
+        `Request failed with status ${res.status} (${res.statusText || 'Error'})`;
+      throw new Error(errMsg);
+    }
+    
+    // If response was 204 No Content or body was empty but OK (200-299)
+    return data || { success: true };
   }, [token]);
 
   // ----- Validate session on mount -----

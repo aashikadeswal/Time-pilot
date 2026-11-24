@@ -101,53 +101,61 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 @router.post("/signup", response_model=AuthResponse)
 async def signup(request: SignupRequest):
     """Register a new user account."""
-    # Validate email format
-    email = request.email.strip().lower()
-    if not validate_email_format(email):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email format"
+    try:
+        # Validate email format
+        email = request.email.strip().lower()
+        if not validate_email_format(email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format. Please provide a valid address like user@example.com"
+            )
+
+        # Validate password strength
+        is_valid, error_msg = validate_password_strength(request.password)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg
+            )
+
+        # Check if user already exists
+        existing_user = await db.users.find_one({"email": email})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this email already exists. Please sign in instead."
+            )
+
+        # Create user document
+        user_doc = {
+            "name": request.name.strip(),
+            "email": email,
+            "password_hash": hash_password(request.password),
+            "institution": request.institution.strip() if request.institution else "",
+            "field_of_study": request.field_of_study.strip() if request.field_of_study else "",
+            "avatar": "",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "onboarding_completed": False,
+        }
+
+        await db.users.insert_one(user_doc)
+
+        # Create access token
+        token = create_access_token(data={"sub": email})
+
+        return AuthResponse(
+            success=True,
+            message="Account created successfully",
+            token=token,
+            user=sanitize_user(user_doc)
         )
-
-    # Validate password strength
-    is_valid, error_msg = validate_password_strength(request.password)
-    if not is_valid:
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error_msg
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database or server error during signup: {str(e)}"
         )
-
-    # Check if user already exists
-    existing_user = await db.users.find_one({"email": email})
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this email already exists"
-        )
-
-    # Create user document
-    user_doc = {
-        "name": request.name.strip(),
-        "email": email,
-        "password_hash": hash_password(request.password),
-        "institution": request.institution.strip() if request.institution else "",
-        "field_of_study": request.field_of_study.strip() if request.field_of_study else "",
-        "avatar": "",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "onboarding_completed": False,
-    }
-
-    await db.users.insert_one(user_doc)
-
-    # Create access token
-    token = create_access_token(data={"sub": email})
-
-    return AuthResponse(
-        success=True,
-        message="Account created successfully",
-        token=token,
-        user=sanitize_user(user_doc)
-    )
 
 
 @router.post("/login", response_model=AuthResponse)
