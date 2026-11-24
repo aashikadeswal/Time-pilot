@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depend: HTTPException, Body, Request, status
+from fastapi import FastAPI, Depends: HTTPException, Body, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
