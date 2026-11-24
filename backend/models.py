@@ -41,11 +41,14 @@ class CommitmentModel(BaseModel):
     endTime: Optional[str] = None
     durationMins: Optional[int] = None
     location: Optional[str] = ""
+    goalId: Optional[str] = None
+    goalName: Optional[str] = None
     color: Optional[str] = "bg-surface-variant"
     line: Optional[str] = "bg-outline"
     ring: Optional[str] = ""
     opacity: Optional[str] = ""
     icon: Optional[str] = "schedule"
+    user_email: Optional[str] = None
 
 class FocusSessionModel(BaseModel):
     id: str

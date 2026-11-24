@@ -14,6 +14,7 @@ export default function Settings({ darkMode, setDarkMode }) {
     toggleGoalPause,
     toggleGoalCompleted,
     deleteGoal,
+    scheduleGoalFocusBlock,
     settings,
     setSettings
   } = useTimePilot();
@@ -29,6 +30,8 @@ export default function Settings({ darkMode, setDarkMode }) {
   const [newGoalPriority, setNewGoalPriority] = useState('High');
   const [newGoalTargetHours, setNewGoalTargetHours] = useState(10);
   const [newGoalDue, setNewGoalDue] = useState('Ongoing');
+  const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
+  const [goalError, setGoalError] = useState(null);
 
   // Edit Goal Modal
   const [editingGoal, setEditingGoal] = useState(null);
@@ -48,24 +51,33 @@ export default function Settings({ darkMode, setDarkMode }) {
   const [userName, setUserName] = useState(user.name);
   const [userEmail, setUserEmail] = useState(user.email);
 
-  const handleCreateGoal = (e) => {
+  const handleCreateGoal = async (e) => {
     e.preventDefault();
-    if (!newGoalName.trim()) return;
+    if (!newGoalName.trim() || isSubmittingGoal) return;
 
-    addGoal({
-      name: newGoalName.trim(),
-      description: newGoalDescription.trim(),
-      category: newGoalCategory,
-      priority: newGoalPriority,
-      targetHoursPerWeek: Number(newGoalTargetHours),
-      due: newGoalDue.trim() || 'Ongoing'
-    });
+    setIsSubmittingGoal(true);
+    setGoalError(null);
 
-    showToast(`Created goal "${newGoalName.trim()}"`);
-    setNewGoalName('');
-    setNewGoalDescription('');
-    setNewGoalDue('Ongoing');
-    setShowAddGoalModal(false);
+    try {
+      await addGoal({
+        name: newGoalName.trim(),
+        description: newGoalDescription.trim(),
+        category: newGoalCategory,
+        priority: newGoalPriority,
+        targetHoursPerWeek: Number(newGoalTargetHours) || 10,
+        due: newGoalDue.trim() || 'Ongoing'
+      });
+
+      showToast(`Goal "${newGoalName.trim()}" saved successfully ✓`);
+      setNewGoalName('');
+      setNewGoalDescription('');
+      setNewGoalDue('Ongoing');
+      setShowAddGoalModal(false);
+    } catch (err) {
+      setGoalError(err.message || 'Failed to save goal. Please check your connection.');
+    } finally {
+      setIsSubmittingGoal(false);
+    }
   };
 
   const handleSaveGoalEdit = (e) => {
@@ -317,19 +329,36 @@ export default function Settings({ darkMode, setDarkMode }) {
                         ></div>
                       </div>
 
-                      {/* Stats Row */}
-                      <div className="flex items-center justify-between mt-2 pt-2 bg-surface/50 rounded-xl px-3 py-2 text-xs font-semibold">
-                        <div className="flex items-center gap-1 text-primary">
-                          <span className="material-symbols-outlined text-sm">timer</span>
-                          <span>{hoursLogged}h focused</span>
+                      {/* Stats Row & Actions */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-2 pt-2 bg-surface/50 rounded-xl px-3 py-2 text-xs font-semibold">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1 text-primary">
+                            <span className="material-symbols-outlined text-sm">timer</span>
+                            <span>{hoursLogged}h focused</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-secondary">
+                            <span className="material-symbols-outlined text-sm">local_fire_department</span>
+                            <span>{goal.streakDays || 0}d streak</span>
+                          </div>
+                          <div className="text-on-surface-variant font-medium hidden md:block">
+                            Target: {goal.targetHoursPerWeek || 10}h/wk ({isCompleted ? 100 : (goal.progress || 0)}%)
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 text-secondary">
-                          <span className="material-symbols-outlined text-sm">local_fire_department</span>
-                          <span>{goal.streakDays || 0}d streak</span>
-                        </div>
-                        <div className="text-on-surface-variant font-medium">
-                          Target: {goal.targetHoursPerWeek || 10}h/wk ({isCompleted ? 100 : (goal.progress || 0)}%)
-                        </div>
+
+                        {!isCompleted && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              scheduleGoalFocusBlock(goal);
+                              showToast(`Focus block for "${goal.name}" added to today's schedule ✓`);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary hover:text-on-primary text-primary text-[11px] font-bold transition-all flex items-center gap-1 active:scale-95"
+                            title="Schedule a focus block on today's timeline"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">calendar_add_on</span>
+                            Schedule Focus Block
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -517,16 +546,35 @@ export default function Settings({ darkMode, setDarkMode }) {
       {showAddGoalModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
           <div className="bg-surface-container-lowest max-w-md w-full rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-headline-md text-on-surface font-bold text-[18px]">Add New Goal</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-headline-md text-on-surface font-bold text-[18px]">Add New Goal</h3>
+              <button
+                type="button"
+                onClick={() => setShowAddGoalModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {goalError && (
+              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">error</span>
+                {goalError}
+              </div>
+            )}
             
             <form onSubmit={handleCreateGoal} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Goal Title</label>
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Goal Title *</label>
                 <input
                   type="text"
                   required
                   value={newGoalName}
-                  onChange={(e) => setNewGoalName(e.target.value)}
+                  onChange={(e) => {
+                    setNewGoalName(e.target.value);
+                    if (goalError) setGoalError(null);
+                  }}
                   placeholder="e.g. Political Science Case Law Revision"
                   className="w-full bg-surface-container-low rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
                   autoFocus
@@ -607,9 +655,24 @@ export default function Settings({ darkMode, setDarkMode }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-primary text-on-primary rounded-lg shadow-sm hover:bg-surface-tint"
+                  disabled={isSubmittingGoal || !newGoalName.trim()}
+                  className={`px-5 py-2 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all ${
+                    isSubmittingGoal || !newGoalName.trim()
+                      ? 'bg-primary/50 text-on-primary/70 cursor-not-allowed'
+                      : 'bg-primary text-on-primary hover:bg-surface-tint active:scale-95'
+                  }`}
                 >
-                  Create Goal
+                  {isSubmittingGoal ? (
+                    <>
+                      <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[14px]">save</span>
+                      Save Goal
+                    </>
+                  )}
                 </button>
               </div>
             </form>

@@ -7,6 +7,7 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const {
     tasks,
+    goals,
     addTask,
     updateTask,
     deleteTask,
@@ -27,6 +28,7 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
   const [duration, setDuration] = useState(45);
   const [category, setCategory] = useState('Studies');
   const [type, setType] = useState('Flexible');
+  const [selectedGoalId, setSelectedGoalId] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [taskView, setTaskView] = useState('today'); // 'today' | 'upcoming' | 'completed'
 
@@ -74,6 +76,7 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
       duration: Number(duration),
       category,
       type,
+      goalId: selectedGoalId || null,
       scheduledTime: '16:00',
       completed: false,
     });
@@ -81,6 +84,7 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
     setTaskName('');
     setTaskDescription('');
     setTaskDate('today');
+    setSelectedGoalId('');
     setIsFocused(false);
     showToast('Task created successfully');
   };
@@ -232,6 +236,20 @@ export default function DailyPlanning({ darkMode, setDarkMode }) {
                       <option value="Fixed">Fixed (Class)</option>
                       <option value="Personal">Personal (Gym)</option>
                     </select>
+
+                    {goals.filter(g => g.status === 'active').length > 0 && (
+                      <select 
+                        value={selectedGoalId}
+                        onChange={(e) => setSelectedGoalId(e.target.value)}
+                        className="px-3 py-1.5 rounded-lg bg-surface text-on-surface text-xs shadow-sm hover:bg-surface-container-high transition-colors cursor-pointer font-bold border-none max-w-[140px] truncate"
+                        title="Link to Goal (Optional)"
+                      >
+                        <option value="">No Goal</option>
+                        {goals.filter(g => g.status === 'active').map(g => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                   
                   <button 

@@ -14,6 +14,8 @@ export default function Dashboard({ darkMode, setDarkMode }) {
     toggleTaskCompleted,
     deleteTask,
     addTask,
+    addGoal,
+    scheduleGoalFocusBlock,
     getFlexibleMinutesAvailable,
     getCapacityStatus,
     getRecommendation,
@@ -30,6 +32,18 @@ export default function Dashboard({ darkMode, setDarkMode }) {
   const [newTaskDuration, setNewTaskDuration] = useState(45);
   const [newTaskPriority, setNewTaskPriority] = useState('High');
   const [newTaskCategory, setNewTaskCategory] = useState('Studies');
+  const [newTaskGoalId, setNewTaskGoalId] = useState('');
+
+  // Add Goal Modal on Dashboard
+  const [showAddGoalModal, setShowAddGoalModal] = useState(false);
+  const [newGoalName, setNewGoalName] = useState('');
+  const [newGoalDescription, setNewGoalDescription] = useState('');
+  const [newGoalCategory, setNewGoalCategory] = useState('Studies');
+  const [newGoalPriority, setNewGoalPriority] = useState('High');
+  const [newGoalTargetHours, setNewGoalTargetHours] = useState(10);
+  const [newGoalDue, setNewGoalDue] = useState('Ongoing');
+  const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
+  const [goalError, setGoalError] = useState(null);
 
   // Toast
   const [toast, setToast] = useState(null);
@@ -110,14 +124,45 @@ export default function Dashboard({ darkMode, setDarkMode }) {
       duration: Number(newTaskDuration),
       priority: newTaskPriority,
       category: newTaskCategory,
+      goalId: newTaskGoalId || null,
       type: 'Flexible',
       scheduledTime: '16:00',
       scheduledDate: 'today'
     });
     setNewTaskName('');
     setNewTaskDescription('');
+    setNewTaskGoalId('');
     setShowQuickAddModal(false);
     showToast('Task added successfully');
+  };
+
+  const handleCreateGoal = async (e) => {
+    e.preventDefault();
+    if (!newGoalName.trim() || isSubmittingGoal) return;
+
+    setIsSubmittingGoal(true);
+    setGoalError(null);
+
+    try {
+      await addGoal({
+        name: newGoalName.trim(),
+        description: newGoalDescription.trim(),
+        category: newGoalCategory,
+        priority: newGoalPriority,
+        targetHoursPerWeek: Number(newGoalTargetHours) || 10,
+        due: newGoalDue.trim() || 'Ongoing'
+      });
+
+      showToast(`Goal "${newGoalName.trim()}" saved successfully ✓`);
+      setNewGoalName('');
+      setNewGoalDescription('');
+      setNewGoalDue('Ongoing');
+      setShowAddGoalModal(false);
+    } catch (err) {
+      setGoalError(err.message || 'Failed to save goal. Please check your connection.');
+    } finally {
+      setIsSubmittingGoal(false);
+    }
   };
 
   const handleApplyRecovery = (strategy) => {
@@ -344,6 +389,142 @@ export default function Dashboard({ darkMode, setDarkMode }) {
           </section>
         )}
 
+        {/* ACTIVE GOALS SECTION */}
+        <section className="flex flex-col gap-3 animate-fade-in-up stagger-2.5">
+          <div className="flex justify-between items-end">
+            <div>
+              <h2 className="text-lg text-on-surface font-bold">
+                Your Goals ({activeGoals.length})
+              </h2>
+              <span className="text-xs text-on-surface-variant font-medium">
+                Learning targets linked with your daily focus blocks
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAddGoalModal(true)}
+                className="text-xs text-primary hover:bg-primary/8 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">add</span> Add Goal
+              </button>
+              <button
+                onClick={() => navigate('/settings')}
+                className="text-xs text-primary hover:underline font-bold flex items-center gap-0.5"
+              >
+                Manage <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {activeGoals.map((goal) => {
+              const isHigh = goal.priority === 'High';
+              const isMed = goal.priority === 'Med';
+              const borderCol = isHigh ? 'bg-primary' : isMed ? 'bg-secondary' : 'bg-tertiary';
+              const hoursLogged = Math.round((goal.focusLoggedMinutes || 0) / 60);
+
+              return (
+                <div
+                  key={goal.id}
+                  className="bg-surface-container rounded-2xl p-4 shadow-sm relative overflow-hidden border border-outline-variant/10 flex flex-col justify-between gap-3 group"
+                >
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${borderCol}`}></div>
+                  
+                  <div className="pl-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="text-on-surface font-bold text-sm md:text-base leading-snug truncate">
+                          {goal.name}
+                        </h3>
+                        {goal.description && (
+                          <p className="text-xs text-on-surface-variant mt-0.5 line-clamp-2">
+                            {goal.description}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        isHigh ? 'bg-error/15 text-error' : isMed ? 'bg-secondary/15 text-secondary' : 'bg-surface-container-high text-on-surface-variant'
+                      }`}>
+                        {goal.priority}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-on-surface-variant font-medium">
+                      <span>{goal.category}</span>
+                      <span>•</span>
+                      <span>Target: {goal.due || 'Ongoing'}</span>
+                      <span>•</span>
+                      <span>{goal.targetHoursPerWeek || 10}h/wk</span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 bg-surface-container-highest rounded-full mt-2.5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isHigh ? 'bg-primary' : isMed ? 'bg-secondary' : 'bg-tertiary'
+                        }`}
+                        style={{ width: `${goal.progress || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Actions Row */}
+                  <div className="flex items-center justify-between pt-1 pl-1 border-t border-outline-variant/10">
+                    <span className="text-[11px] text-primary font-bold">
+                      {hoursLogged}h logged ({goal.progress || 0}%)
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          scheduleGoalFocusBlock(goal);
+                          showToast(`Focus block for "${goal.name}" added to today's schedule ✓`);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container-high text-primary text-[11px] font-bold transition-all shadow-sm flex items-center gap-1"
+                        title="Add focus block to today's schedule"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">calendar_add_on</span>
+                        Schedule Block
+                      </button>
+                      <button
+                        onClick={() => {
+                          const taskForGoal = {
+                            name: goal.name,
+                            category: goal.category,
+                            duration: 45,
+                            goalId: goal.id,
+                            priority: goal.priority
+                          };
+                          handleStartFocus(taskForGoal);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-primary text-on-primary text-[11px] font-bold shadow-sm hover:bg-surface-tint active:scale-95 transition-all flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">play_arrow</span>
+                        Focus
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {activeGoals.length === 0 && (
+            <div className="bg-surface-container rounded-2xl p-6 text-center border border-outline-variant/10 flex flex-col items-center justify-center gap-1.5">
+              <span className="material-symbols-outlined text-outline text-2xl">flag</span>
+              <h4 className="text-sm font-bold text-on-surface">No active goals yet</h4>
+              <p className="text-xs text-on-surface-variant max-w-xs">
+                Add your learning goals to guide your daily focus sessions and study timeline.
+              </p>
+              <button
+                onClick={() => setShowAddGoalModal(true)}
+                className="mt-2 bg-primary text-on-primary px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-transform"
+              >
+                Add Your First Goal
+              </button>
+            </div>
+          )}
+        </section>
+
         {/* Timeline Preview */}
         <section className="flex flex-col gap-3 animate-fade-in-up stagger-3">
           <div className="flex justify-between items-end">
@@ -372,11 +553,18 @@ export default function Dashboard({ darkMode, setDarkMode }) {
                     <span className="text-[11px] text-on-surface-variant block font-semibold">
                       {item.time} ({item.duration})
                     </span>
-                    <p className={`text-sm font-semibold ${
-                      item.type === 'Flexible' ? 'text-primary' : 'text-on-surface'
-                    }`}>
-                      {item.name}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className={`text-sm font-semibold ${
+                        item.type === 'Flexible' ? 'text-primary' : 'text-on-surface'
+                      }`}>
+                        {item.name}
+                      </p>
+                      {item.goalName && (
+                        <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">
+                          Goal: {item.goalName}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {item.type === 'Flexible' && (
                     <button
@@ -702,6 +890,20 @@ export default function Dashboard({ darkMode, setDarkMode }) {
                 </select>
               </div>
 
+              <div>
+                <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Link to Goal (Optional)</label>
+                <select
+                  value={newTaskGoalId}
+                  onChange={(e) => setNewTaskGoalId(e.target.value)}
+                  className="w-full bg-surface-container-low rounded-xl px-3 py-2.5 text-on-surface text-sm"
+                >
+                  <option value="">None (Independent Task)</option>
+                  {goals.filter(g => g.status === 'active').map(g => (
+                    <option key={g.id} value={g.id}>{g.name} ({g.category})</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/15">
                 <button
                   type="button"
@@ -715,6 +917,144 @@ export default function Dashboard({ darkMode, setDarkMode }) {
                   className="px-5 py-2 text-xs font-bold bg-primary text-on-primary rounded-lg shadow-sm hover:bg-surface-tint active:scale-95 transition-all"
                 >
                   Save Task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD GOAL MODAL ON DASHBOARD */}
+      {showAddGoalModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-6 animate-fade-in text-left">
+          <div className="bg-surface-container-lowest max-w-md w-full rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-headline-md text-on-surface font-bold text-[18px]">Add New Goal</h3>
+              <button
+                type="button"
+                onClick={() => setShowAddGoalModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {goalError && (
+              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">error</span>
+                {goalError}
+              </div>
+            )}
+            
+            <form onSubmit={handleCreateGoal} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Goal Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={newGoalName}
+                  onChange={(e) => {
+                    setNewGoalName(e.target.value);
+                    if (goalError) setGoalError(null);
+                  }}
+                  placeholder="e.g. Political Science Case Law Revision"
+                  className="w-full bg-surface-container-low rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  value={newGoalDescription}
+                  onChange={(e) => setNewGoalDescription(e.target.value)}
+                  placeholder="What does success look like? Any milestones or notes..."
+                  className="w-full bg-surface-container-low rounded-xl px-4 py-2 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Priority</label>
+                  <select
+                    value={newGoalPriority}
+                    onChange={(e) => setNewGoalPriority(e.target.value)}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  >
+                    <option value="High">🔴 High Priority</option>
+                    <option value="Med">🟡 Medium Priority</option>
+                    <option value="Low">🟢 Low Priority</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Target Hours/Wk</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={newGoalTargetHours}
+                    onChange={(e) => setNewGoalTargetHours(e.target.value)}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Category</label>
+                  <select
+                    value={newGoalCategory}
+                    onChange={(e) => setNewGoalCategory(e.target.value)}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  >
+                    <option value="Studies">Studies</option>
+                    <option value="Competitive Exams">Competitive Exams</option>
+                    <option value="Thesis">Thesis</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Career">Career</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Target Date</label>
+                  <input
+                    type="text"
+                    value={newGoalDue}
+                    onChange={(e) => setNewGoalDue(e.target.value)}
+                    placeholder="e.g. Dec 15 or 2026-12-15"
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-surface-container">
+                <button
+                  type="button"
+                  onClick={() => setShowAddGoalModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingGoal || !newGoalName.trim()}
+                  className={`px-5 py-2 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all ${
+                    isSubmittingGoal || !newGoalName.trim()
+                      ? 'bg-primary/50 text-on-primary/70 cursor-not-allowed'
+                      : 'bg-primary text-on-primary hover:bg-surface-tint active:scale-95'
+                  }`}
+                >
+                  {isSubmittingGoal ? (
+                    <>
+                      <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[14px]">save</span>
+                      Save Goal
+                    </>
+                  )}
                 </button>
               </div>
             </form>

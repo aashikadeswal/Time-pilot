@@ -8,6 +8,7 @@ export default function Timeline({ darkMode, setDarkMode }) {
   const {
     commitments,
     tasks,
+    goals,
     addCommitment,
     deleteCommitment,
     rescheduleMissedTask,
@@ -20,8 +21,9 @@ export default function Timeline({ darkMode, setDarkMode }) {
   const [name, setName] = useState('');
   const [time, setTime] = useState('16:00');
   const [endTime, setEndTime] = useState('17:00');
-  const [type, setType] = useState('Fixed');
+  const [type, setType] = useState('Flexible');
   const [locationStr, setLocationStr] = useState('');
+  const [selectedGoalId, setSelectedGoalId] = useState('');
 
   // Reschedule missed task modal
   const [selectedMissedTask, setSelectedMissedTask] = useState(null);
@@ -73,17 +75,22 @@ export default function Timeline({ darkMode, setDarkMode }) {
     e.preventDefault();
     if (!name.trim()) return;
 
+    const linkedGoal = goals.find(g => g.id === selectedGoalId);
+
     addCommitment({
       name: name.trim(),
       time,
       endTime,
       duration: calculateDuration(time, endTime),
       type,
-      location: locationStr
+      location: locationStr,
+      goalId: linkedGoal ? linkedGoal.id : null,
+      goalName: linkedGoal ? linkedGoal.name : null,
     });
 
     setName('');
     setLocationStr('');
+    setSelectedGoalId('');
     setShowModal(false);
     showToast(`Added "${name.trim()}" to schedule`);
   };
@@ -230,12 +237,18 @@ export default function Timeline({ darkMode, setDarkMode }) {
                       }`}></div>
                       
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className={`font-label-md text-label-md font-bold text-[15px] ${
                             item.type === 'Flexible' ? 'text-primary' : 'text-on-surface'
                           }`}>
                             {item.name}
                           </span>
+                          {item.goalName && (
+                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                              <span className="material-symbols-outlined text-[11px]">flag</span>
+                              {item.goalName}
+                            </span>
+                          )}
                           {isCurrent && (
                             <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold animate-pulse">
                               Now
@@ -432,6 +445,20 @@ export default function Timeline({ darkMode, setDarkMode }) {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Link to Goal (Optional)</label>
+                  <select
+                    value={selectedGoalId}
+                    onChange={(e) => setSelectedGoalId(e.target.value)}
+                    className="w-full bg-surface-container-low rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none"
+                  >
+                    <option value="">None (Independent Block)</option>
+                    {goals.filter(g => g.status === 'active').map(g => (
+                      <option key={g.id} value={g.id}>{g.name} ({g.category})</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-1">

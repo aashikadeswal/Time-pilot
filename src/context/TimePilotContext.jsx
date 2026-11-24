@@ -88,7 +88,7 @@ const INITIAL_SETTINGS = {
 
 export function TimePilotProvider({ children }) {
   const auth = useAuth() || {};
-  const { user: authUser, token, authFetch } = auth;
+  const { user: authUser, token, authFetch, loading: authLoading } = auth;
 
   // Active user identity: prefer authenticated user, fallback to stored/initial
   const [user, setUser] = useState(() => {
@@ -115,28 +115,33 @@ export function TimePilotProvider({ children }) {
   const userTasksKey = userKey ? `timepilot_tasks_${userKey}` : STORAGE_KEYS.TASKS;
   const userGoalsKey = userKey ? `timepilot_goals_${userKey}` : STORAGE_KEYS.GOALS;
 
-  const [goals, setGoals] = useState(() => {
-    if (userKey) {
-      const saved = localStorage.getItem(userGoalsKey);
-      return saved ? JSON.parse(saved) : [];
+  // Helper to read initial scoped storage even before first React effect
+  const getInitialScoped = (type) => {
+    try {
+      const authUserRaw = localStorage.getItem('timepilot_auth_user');
+      const parsedAuth = authUserRaw ? JSON.parse(authUserRaw) : null;
+      const emailKey = parsedAuth?.email ? parsedAuth.email.toLowerCase() : null;
+      if (emailKey) {
+        const scopedKey = `timepilot_${type}_${emailKey}`;
+        const saved = localStorage.getItem(scopedKey);
+        if (saved) return JSON.parse(saved);
+      }
+      const genericKey = type === 'goals' ? STORAGE_KEYS.GOALS : STORAGE_KEYS.TASKS;
+      const genericSaved = localStorage.getItem(genericKey);
+      return genericSaved ? JSON.parse(genericSaved) : [];
+    } catch {
+      return [];
     }
-    const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
-    return saved ? JSON.parse(saved) : [];
-  });
+  };
+
+  const [goals, setGoals] = useState(() => getInitialScoped('goals'));
 
   const [commitments, setCommitments] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.COMMITMENTS);
     return saved ? JSON.parse(saved) : INITIAL_COMMITMENTS;
   });
 
-  const [tasks, setTasks] = useState(() => {
-    if (userKey) {
-      const saved = localStorage.getItem(userTasksKey);
-      return saved ? JSON.parse(saved) : [];
-    }
-    const saved = localStorage.getItem(STORAGE_KEYS.TASKS);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [tasks, setTasks] = useState(() => getInitialScoped('tasks'));
 
   const [focusHistory, setFocusHistory] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.FOCUS_HISTORY);
@@ -156,30 +161,32 @@ export function TimePilotProvider({ children }) {
   // Active task for Focus Center
   const [activeFocusTask, setActiveFocusTask] = useState(null);
 
-  // Sync to localStorage
+  // Sync to localStorage - guard with !authLoading to avoid wiping data
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
   }, [user]);
 
   useEffect(() => {
+    if (authLoading) return;
     if (userKey) {
       localStorage.setItem(userGoalsKey, JSON.stringify(goals));
-    } else {
+    } else if (!authUser) {
       localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
     }
-  }, [goals, userKey, userGoalsKey]);
+  }, [goals, userKey, userGoalsKey, authLoading, authUser]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.COMMITMENTS, JSON.stringify(commitments));
   }, [commitments]);
 
   useEffect(() => {
+    if (authLoading) return;
     if (userKey) {
       localStorage.setItem(userTasksKey, JSON.stringify(tasks));
-    } else {
+    } else if (!authUser) {
       localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
     }
-  }, [tasks, userKey, userTasksKey]);
+  }, [tasks, userKey, userTasksKey, authLoading, authUser]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.FOCUS_HISTORY, JSON.stringify(focusHistory));
@@ -195,9 +202,14 @@ export function TimePilotProvider({ children }) {
 
   // Load user data from backend API whenever authenticated user or token changes
   useEffect(() => {
+    if (authLoading) {
+      // Never wipe or touch state while auth is resolving
+      return;
+    }
+
     if (!token || !userKey || !authFetch) {
       if (!authUser) {
-        // Clear tasks and goals on logout
+        // Clear tasks and goals on explicit logout
         setGoals([]);
         setTasks([]);
       }
@@ -210,31 +222,39 @@ export function TimePilotProvider({ children }) {
     const cachedTasks = localStorage.getItem(userTasksKey);
     if (cachedTasks) {
       try {
-        setTasks(JSON.parse(cachedTasks));
+        const parsedTasks = JSON.parse(cachedTasks);
+        if (Array.isArray(parsedTasks) && parsedTasks.length > 0) {
+          setTasks(parsedTasks);
+        }
       } catch {
-        setTasks([]);
+        // keep existing
       }
-    } else {
-      setTasks([]);
     }
 
     const cachedGoals = localStorage.getItem(userGoalsKey);
     if (cachedGoals) {
       try {
-        setGoals(JSON.parse(cachedGoals));
+        const parsedGoals = JSON.parse(cachedGoals);
+        if (Array.isArray(parsedGoals) && parsedGoals.length > 0) {
+          setGoals(parsedGoals);
+        }
       } catch {
-        setGoals([]);
+        // keep existing
       }
-    } else {
-      setGoals([]);
     }
 
     // Then fetch user's saved data from the database
     const fetchUserData = async () => {
       try {
         const [remoteGoals, remoteTasks] = await Promise.all([
-          authFetch('/api/goals').catch(() => null),
-          authFetch('/api/tasks').catch(() => null),
+          authFetch('/api/goals').catch((err) => {
+            console.warn('API /api/goals fetch error:', err);
+            return null;
+          }),
+          authFetch('/api/tasks').catch((err) => {
+            console.warn('API /api/tasks fetch error:', err);
+            return null;
+          }),
         ]);
 
         if (!isMounted) return;
@@ -257,7 +277,7 @@ export function TimePilotProvider({ children }) {
     return () => {
       isMounted = false;
     };
-  }, [token, userKey]);
+  }, [token, userKey, authLoading, authUser, authFetch]);
 
   // --- Flexible Available Time Calculation ---
   // Calculates flexible study time available in the day (minutes)
@@ -535,6 +555,8 @@ export function TimePilotProvider({ children }) {
       duration: cData.duration || '1h',
       durationMins: cData.durationMins || 60,
       location: cData.location || '',
+      goalId: cData.goalId || null,
+      goalName: cData.goalName || null,
       icon: cData.icon || 'schedule',
       color: cData.type === 'Flexible' ? 'bg-primary' : cData.type === 'Rest' ? 'bg-secondary-container' : 'bg-surface-variant',
       line: cData.type === 'Flexible' ? 'bg-primary/50' : cData.type === 'Rest' ? 'bg-secondary-container' : 'bg-outline'
@@ -545,6 +567,27 @@ export function TimePilotProvider({ children }) {
 
   const deleteCommitment = (cId) => {
     setCommitments(prev => prev.filter(c => c.id !== cId));
+  };
+
+  // Schedule a focus block linked to a specific goal
+  const scheduleGoalFocusBlock = (goal, time = '16:00', durationMins = 45) => {
+    const [startH, startM] = (time || '16:00').split(':').map(Number);
+    const endMinutes = (startH * 60 + startM + durationMins) % (24 * 60);
+    const endH = Math.floor(endMinutes / 60);
+    const endM = endMinutes % 60;
+    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+    return addCommitment({
+      name: `${goal.name || 'Goal'} (Focus Block)`,
+      time,
+      endTime,
+      duration: `${durationMins}m`,
+      durationMins,
+      type: 'Flexible',
+      goalId: goal.id,
+      goalName: goal.name,
+      location: 'Focus Space',
+    });
   };
 
   // Goal Actions
@@ -562,17 +605,35 @@ export function TimePilotProvider({ children }) {
       streakDays: 0,
       targetHoursPerWeek: Number(gData.targetHoursPerWeek) || 10,
       icon: gData.icon || 'flag',
-      user_email: authUser?.email || null,
+      user_email: authUser?.email ? authUser.email.toLowerCase() : null,
     };
+
+    // Update state immediately so UI updates without lag
     setGoals(prev => [newGoal, ...prev]);
+
+    // Update user-scoped localStorage immediately
+    if (userKey) {
+      try {
+        const existing = JSON.parse(localStorage.getItem(userGoalsKey) || '[]');
+        localStorage.setItem(userGoalsKey, JSON.stringify([newGoal, ...existing.filter(g => g.id !== newGoal.id)]));
+      } catch (e) {
+        console.warn('Could not cache goal locally:', e);
+      }
+    }
+
     if (token && authFetch) {
       try {
-        await authFetch('/api/goals', {
+        const savedGoal = await authFetch('/api/goals', {
           method: 'POST',
           body: JSON.stringify(newGoal),
         });
+        if (savedGoal && savedGoal.id) {
+          setGoals(prev => prev.map(g => g.id === newGoal.id ? { ...g, ...savedGoal } : g));
+          return savedGoal;
+        }
       } catch (err) {
-        console.warn('FastAPI goal create sync failed, cached locally:', err);
+        console.error('FastAPI goal create failed:', err);
+        throw err;
       }
     }
     return newGoal;
@@ -784,6 +845,7 @@ export function TimePilotProvider({ children }) {
     toggleGoalPause,
     toggleGoalCompleted,
     deleteGoal,
+    scheduleGoalFocusBlock,
     logFocusSession,
     sendChatMessage,
     getFlexibleMinutesAvailable,

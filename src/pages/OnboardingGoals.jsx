@@ -22,6 +22,8 @@ export default function OnboardingGoals({ darkMode, setDarkMode }) {
     { id: 'career', name: 'Career & Internships', category: 'Career', icon: 'work' }
   ];
 
+  const [customGoalsList, setCustomGoalsList] = useState([]);
+
   const handleToggle = (name) => {
     setSelectedGoals(prev =>
       prev.includes(name) ? prev.filter(g => g !== name) : [...prev, name]
@@ -34,13 +36,7 @@ export default function OnboardingGoals({ darkMode, setDarkMode }) {
     const name = customGoalName.trim();
     if (!selectedGoals.includes(name)) {
       setSelectedGoals(prev => [...prev, name]);
-      addGoal({
-        name,
-        category: 'Personal',
-        priority: selectedPriority,
-        targetHoursPerWeek: 10,
-        due: 'Ongoing'
-      });
+      setCustomGoalsList(prev => [...prev, { name, priority: selectedPriority }]);
     }
     setCustomGoalName('');
     setShowAddCustom(false);
@@ -49,10 +45,11 @@ export default function OnboardingGoals({ darkMode, setDarkMode }) {
   const handleContinue = () => {
     selectedGoals.forEach(gName => {
       const preset = presetGoals.find(p => p.name === gName);
+      const custom = customGoalsList.find(c => c.name === gName);
       addGoal({
         name: gName,
         category: preset?.category || 'Personal',
-        priority: 'High',
+        priority: custom?.priority || 'High',
         targetHoursPerWeek: 10,
         due: 'Ongoing',
         icon: preset?.icon || 'flag'
